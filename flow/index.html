@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Как студия агентов ведёт продукт от идеи до дизайна: шесть этапов, четыре гейта, кто кому передаёт задачу.">
+<meta property="og:title" content="Флоу студии по этапам">
+<meta property="og:description" content="Шесть этапов, четыре гейта, 14 ролей. Анимация передачи задач между агентами и владельцем.">
+<title>Флоу студии по этапам</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: sticky vertical rail of stages on the left; on the right one scene per stage: swimlanes of actors, time runs down, a gate card closes the stage. */
+:root{
+  --bg:#f7f7f8; --panel:#ffffff; --ink:#1a1c20; --muted:#6a6f7a; --line:#e3e5ea; --tint:#f1f2fb;
+  --accent:#5560cf; --owner:#b4690e; --owner-bg:#fdf1dc; --ok:#1f8f5f; --repo:#7a52c7;
+  --r-owner:#b4690e; --r-lead:#5560cf; --r-res:#0f8a7e; --r-idea:#c2417f; --r-po:#2f7fd1; --r-arch:#5f6b7a; --r-repo:#7a52c7; --r-mk:#cf5a1e; --r-copy:#7b7f16; --r-pd:#0b86a6; --r-vd:#a945c9; --r-dr:#c6453f; --r-ux:#2f9a4f;
+  --display:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e0f11; --panel:#15171a; --ink:#e7e8eb; --muted:#8a8f99; --line:#272a30; --tint:#1b1d2b;
+    --accent:#8e97f2; --owner:#f0b257; --owner-bg:#3a2a10; --ok:#4cc38a; --repo:#b393f0;
+    --r-owner:#f0b257; --r-lead:#8e97f2; --r-res:#4fd0c2; --r-idea:#f08cba; --r-po:#74b4f5; --r-arch:#a3adba; --r-repo:#b393f0; --r-mk:#f59a66; --r-copy:#cfd45a; --r-pd:#5cc8e6; --r-vd:#d79af0; --r-dr:#f58d86; --r-ux:#73d590;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e0f11; --panel:#15171a; --ink:#e7e8eb; --muted:#8a8f99; --line:#272a30; --tint:#1b1d2b;
+  --accent:#8e97f2; --owner:#f0b257; --owner-bg:#3a2a10; --ok:#4cc38a; --repo:#b393f0;
+    --r-owner:#f0b257; --r-lead:#8e97f2; --r-res:#4fd0c2; --r-idea:#f08cba; --r-po:#74b4f5; --r-arch:#a3adba; --r-repo:#b393f0; --r-mk:#f59a66; --r-copy:#cfd45a; --r-pd:#5cc8e6; --r-vd:#d79af0; --r-dr:#f58d86; --r-ux:#73d590;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+header{margin:0 0 22px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-size:26px;line-height:1.2;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.lead{color:var(--muted);margin:0;max-width:62ch}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:500}
+.layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:28px;align-items:start}
+/* rail */
+.rail{position:sticky;top:16px;list-style:none;margin:0;padding:6px 0 6px 0}
+.rail li{position:relative;padding:0 0 0 30px;font-size:13.5px;color:var(--muted);transition:color .3s}
+.rail button{all:unset;display:block;width:100%;padding:7px 8px 8px 0;cursor:pointer;border-radius:6px}
+.rail button:hover{color:var(--ink)}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rail li em{display:block;font-style:normal;font-weight:400;font-size:12px;line-height:1.35;color:var(--muted);margin-top:1px}
+.rail li::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:var(--line)}
+.rail li:first-child::before{top:14px}.rail li:last-child::before{bottom:calc(100% - 14px)}
+.rail li::after{content:"";position:absolute;left:5px;top:11px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:1.5px solid var(--muted);transition:all .3s}
+.rail li.gate::after{border-radius:2px;transform:rotate(45deg);width:9px;height:9px;left:6px;top:12px;border-color:var(--owner)}
+.rail li.gate{color:var(--owner)}
+.rail li small{font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:400;margin-left:6px}
+.rail li.on{color:var(--ink);font-weight:600}
+.rail li.on::after{border-color:var(--accent);box-shadow:0 0 0 4px var(--tint)}
+.rail li.gate.on::after{border-color:var(--owner);box-shadow:0 0 0 4px var(--owner-bg)}
+.rail li.done::after{background:var(--ok);border-color:var(--ok)}
+.rail li.done{color:var(--ink)}
+/* scene */
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin:0 0 28px}
+.inner{min-width:660px}
+.shead{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.shead .k{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px}
+.shead h2{font-size:19px;font-weight:600;margin:0}
+.shead p{margin:0;color:var(--muted);font-size:13.5px}
+.grid{display:grid;grid-template-columns:50px minmax(0,1fr) 270px}
+.roles{display:flex;flex-wrap:wrap;gap:6px 8px;padding:12px 22px;border-bottom:1px solid var(--line)}
+.role{--c:var(--accent);display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px 3px 4px;border-radius:12px;border:1px solid var(--line);color:var(--muted)}
+.av{--c:var(--accent);width:22px;height:22px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--c);color:var(--panel)}
+.av svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.role .av{width:18px;height:18px}.role .av svg{width:11px;height:11px}
+.row{border-bottom:1px solid var(--line);transition:opacity .4s,background .4s}
+.row .tag{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:16px 0 0 16px}
+.row .area{padding:12px 14px 12px 6px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.row .note{padding:12px 18px 12px 16px;font-size:13px;line-height:1.4;border-left:1px solid var(--line)}
+.row .note b{display:block;font-weight:600;margin-bottom:2px}
+.row .note span{color:var(--muted)}
+.row.idle{opacity:.3}
+.row.active{background:var(--tint)}
+.row.active .note span{color:var(--ink)}
+.hop{display:flex;align-items:center;gap:8px;min-height:42px}
+.from{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;transition:opacity .5s}
+.from .av{width:18px;height:18px;opacity:.75}.from .av svg{width:11px;height:11px}
+.arr{color:var(--muted);font-size:14px;transition:opacity .5s}
+.bub{--c:var(--accent);display:inline-flex;align-items:center;gap:9px;padding:5px 14px 5px 6px;border-radius:22px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 13%,var(--panel));transition:transform .9s ease,border-color .45s,background-color .45s;white-space:nowrap}
+.bub .av{width:28px;height:28px;transition:background-color .45s}.bub .av svg{width:16px;height:16px}
+.bub .tx{display:flex;flex-direction:column;line-height:1.2}
+.bub .tx small{font-size:11px;color:var(--c);font-weight:600;transition:color .45s}
+.bub .tx b{font-size:13.5px;font-weight:500}
+.bub.file .tx b{font-family:var(--mono);font-size:12.5px}
+.bub .st{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);margin-left:2px;flex:none}
+.bub.done .st{background:var(--ok);border-color:var(--ok)}
+.row.pre .from,.row.pre .arr{opacity:0}
+/* gate */
+.gcard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;padding:20px 22px 22px;background:var(--panel);transition:opacity .4s}
+.gcard.idle{opacity:.3}
+.gcard h3{font-size:15px;font-weight:600;margin:0 0 8px;color:var(--owner)}
+.gcard ul{margin:0;padding:0;list-style:none;font-size:13px}
+.gcard li{padding:5px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}
+.gcard li code{font-family:var(--mono);font-size:12px;min-width:118px;color:var(--repo)}
+.gcard li span{color:var(--muted)}
+.cbox{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:12px}
+.cbox .who{font-size:12px;color:var(--muted);margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.cbox .who i{width:20px;height:20px;border-radius:50%;background:var(--owner);color:var(--panel);font-style:normal;font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.field{font-family:var(--mono);font-size:14px;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);display:flex;align-items:center}
+.field.focus{border-color:var(--owner);box-shadow:0 0 0 3px var(--owner-bg)}
+.caret{display:inline-block;width:1.5px;height:17px;background:var(--ink);margin-left:1px;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.send{margin-top:8px;display:flex;justify-content:flex-end}
+.send span{font-size:12.5px;font-weight:500;padding:6px 12px;border-radius:6px;background:var(--line);color:var(--muted);transition:all .25s}
+.send span.go{background:var(--owner);color:var(--panel)}
+.after{list-style:none;margin:12px 0 0;padding:0;font-size:13px}
+.after li{display:flex;gap:9px;align-items:baseline;padding:4px 0;opacity:0;transform:translateY(4px);transition:all .4s}
+.after li.show{opacity:1;transform:none}
+.after li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;position:relative;top:-1px}
+.after code{font-family:var(--mono);font-size:12px}
+.stub{padding:18px 22px 22px;color:var(--muted);font-size:13.5px}
+.stub ol{margin:8px 0 0;padding-left:20px;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);padding:12px 22px;border-top:1px solid var(--line)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
+@media (max-width:860px){
+  .wrap{padding:14px 12px 60px} h1{font-size:21px} header{margin-bottom:12px}
+  .layout{grid-template-columns:minmax(0,1fr);gap:12px}
+  .rail{position:sticky;top:0;z-index:5;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;background:var(--bg);margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line);scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .rail li{padding:0;flex:none} .rail li::before,.rail li::after{display:none}
+  .rail button{padding:5px 11px;border:1px solid var(--line);border-radius:14px;font-size:12.5px;white-space:nowrap;width:auto;background:var(--panel)}
+  .rail li em,.rail li small{display:none}
+  .rail li.on button{border-color:var(--accent);background:var(--tint)}
+  .rail li.gate.on button{border-color:var(--owner);background:var(--owner-bg)}
+  .rail li.done button{color:var(--ink)}
+  .scene{scroll-margin-top:56px;margin-bottom:16px}
+  .inner{min-width:0}
+  .shead{padding:14px 14px 12px;gap:8px 12px} .shead h2{font-size:17px}
+  .roles{padding:10px 14px}
+  .grid{grid-template-columns:40px minmax(0,1fr)}
+  .row .tag{padding:14px 0 0 10px;font-size:10.5px}
+  .row .area{padding:12px 12px 8px 4px}
+  .row .note{grid-column:1 / -1;border-left:0;padding:0 14px 12px 44px}
+  .hop{flex-direction:column;align-items:flex-start;gap:4px;min-height:0}
+  .arr{display:none}
+  .bub{white-space:normal;max-width:100%}
+  .gcard{grid-template-columns:minmax(0,1fr);padding:16px 14px}
+  .gcard li code{min-width:0;flex:none;max-width:45%}
+  .field{font-size:13px}
+  .nogate{padding:12px 14px}
+}
+@media (prefers-reduced-motion: reduce){.bub,.from,.arr,.row,.after li{transition:none}.caret{animation:none}}
+
+.scene{scroll-margin-top:12px}
+.toplegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);margin:0 0 16px}
+.toplegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
+.nogate{padding:14px 22px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Флоу студии по этапам</h1>
+      <p class="lead">Время идёт сверху вниз. Плашка задачи красится в цвет того, кто её держит. На гейте работа ждёт владельца.</p>
+    </div>
+    <div class="bar">
+      <button class="primary" id="play" type="button">Пауза</button>
+      <button id="restart" type="button">Сначала</button>
+      <button id="follow" type="button" aria-pressed="true">Следить за шагом: да</button>
+      <button id="theme" type="button">Тема: авто</button>
+    </div>
+  </header>
+  <div class="layout">
+    <ol class="rail" id="rail"></ol>
+    <div>
+      <div class="toplegend"><span><i></i>задача в работе</span><span><i style="background:var(--ok);border-color:var(--ok)"></i>задача done или файл в репозитории</span><span>Слева от плашки видно, от кого пришла задача</span></div>
+      <div id="scenes"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var ROLE={
+   owner:['Владелец','<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/>'],
+   lead:['Лидер','<path d="M6 21V4"/><path d="M6 5h11l-2.5 3.5L17 12H6"/>'],
+   res:['Исследователь','<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>'],
+   idea:['Партнёр по идее','<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V15h7v-1.1A6 6 0 0 0 12 3z"/>'],
+   po:['Product owner','<path d="M7 3h7l4 4v14H7z"/><path d="M10 12h6M10 16h6"/>'],
+   arch:['Архитектор','<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'],
+   mk:['Маркетолог','<path d="M4 10v4h3l7 4V6l-7 4z"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5"/>'],
+   copy:['Копирайтер','<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>'],
+   pd:['Product designer','<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 9v11"/>'],
+   vd:['Visual designer','<path d="M12 3c3 4 6 6.8 6 10.5a6 6 0 0 1-12 0C6 9.8 9 7 12 3z"/>'],
+   dr:['Ревьюер дизайна','<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'],
+   ux:['UX-ревьюер','<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 17c5-1 3-9 8-10"/>'],
+   repo:['home repo','<circle cx="7" cy="6" r="2.2"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="9" r="2.2"/><path d="M7 8.2v7.6M17 11.2c0 3-4 3.3-10 4.6"/>'],
+   drepo:['design repo','<circle cx="7" cy="6" r="2.2"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="9" r="2.2"/><path d="M7 8.2v7.6M17 11.2c0 3-4 3.3-10 4.6"/>']
+  };
+  function col(k){return 'var(--r-'+(k==='drepo'?'repo':k)+')';}
+  function isRepo(k){return k==='repo'||k==='drepo';}
+  function av(k){return '<span class="av" style="--c:'+col(k)+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+ROLE[k][1]+'</svg></span>';}
+  var SC=[
+   {k:'s1',n:'ЭТАП 1',code:'S1–S3',short:'Вопросы, исследование, PRD',title:'Продукт: от идеи до PRD',sub:'S1 вопросы · S2 исследование · S3 PRD. Одна задача, без остановок до гейта.',rows:[
+    ['S1',[['owner','lead','идея']],'Владелец пишет идею','Он упоминает лидера в задаче. Упоминание запускает лидера. Смена статуса запуск не начинает.'],
+    ['S1',[['lead','owner','до 5 вопросов']],'Лидер уточняет','Он создаёт задачу инициативы и ветки в двух репозиториях. Вопросы он задаёт, только если данных мало.'],
+    ['S1',[['owner','lead','ответы']],'Владелец отвечает','Одобрять бриф не нужно. После ответов работа идёт без остановок до гейта.'],
+    ['S2',[['lead','res','рынок и конкуренты'],['lead','idea','брейншторм']],'Две задачи параллельно','У обеих один номер этапа. Аналитик данных здесь не участвует: данных ещё нет.'],
+    ['S2',[['idea','owner','5–8 направлений']],'Спор об идее','Партнёр по идее предлагает разные направления и ранжирует допущения по риску. Это единственное место этапа, где владелец работает вместе с агентом.'],
+    ['S2',[['res','repo','research.md'],['idea','repo','idea brief']],'Результат в репозитории','Факты идут с источниками. Обе задачи закрыты, и платформа будит лидера.'],
+    ['S3',[['lead','po','PRD и бриф'],['lead','arch','можно ли построить']],'PRD и проверка параллельно','Product owner собирает PRD из исследования и брифа идеи. Архитектор из команды разработки оценивает осуществимость.'],
+    ['S3',[['po','po','pre-mortem, red team']],'Проверка на прочность','До гейта PRD проходит две проверки: что сломается после запуска и какие допущения самые слабые. Итог идёт в бриф.'],
+    ['S3',[['po','repo','prd.md, brief.md'],['arch','repo','feasibility.md']],'Пакет готов','В PRD нет блокирующих открытых вопросов. Критерии приёмки можно проверить.'],
+    ['G1',[['lead','owner','запрос G1']],'Лидер останавливается','Он прикладывает бриф и ждёт. Через гейт агенты не идут.']],
+    gate:{k:'g1',name:'Гейт G1',code:'PRD',short:'Владелец утверждает PRD',pack:[['brief.md','бриф на одну страницу: что строим, риски, что решить'],['prd.md','требования и критерии приёмки'],['research.md','рынок и конкуренты, с источниками'],['feasibility.md','оценка архитектора']],text:'approve G1 prd v1',after:['Лидер ставит тег <code>gate/&lt;init&gt;/prd-v1</code>','Версия PRD заморожена. Правки после гейта идут запросом на изменение','Лидер запускает этап 2']}},
+   {k:'s2',n:'ЭТАП 2',code:'S4',short:'Позиционирование и тексты',title:'Контент: смысл и тексты',sub:'S4. Гейта владельца нет: тексты принимает лидер.',rows:[
+    ['S4',[['lead','res','доводы из исследования'],['lead','mk','позиционирование']],'Две задачи параллельно','Исследователь собирает доводы из research.md. Маркетолог пишет, для кого продукт и чем он отличается.'],
+    ['S4',[['res','repo','research-rationale.md'],['mk','repo','positioning.md']],'Основа для текстов','Копирайтер не начинает, пока нет позиционирования. Поэтому он стоит в следующем этапе.'],
+    ['S4',[['lead','copy','тексты продукта']],'Копирайтер пишет голосом бренда','Он пишет описание продукта, строки интерфейса и страницу магазина приложений.'],
+    ['S4',[['copy','repo','about.md, strings.json'],['copy','repo','app-store.md']],'Строки лежат в одном файле','Дизайнеры ставят текст в макеты по ключам из strings.json. Текст в макете руками не пишут.'],
+    ['S4',[['lead','lead','приёмка текстов']],'Лидер принимает сам','Он проверяет тексты по правилам приёмки и запускает дизайн.']]},
+   {k:'s3',n:'ЭТАП 3',code:'S5-S, S5-1',short:'Структура экранов и доска рефов',title:'Рефы: структура и доска',sub:'Структура экранов и поиск рефов идут параллельно.',rows:[
+    ['S5-S',[['lead','pd','структура экранов'],['lead','vd','поиск рефов']],'Структура и рефы параллельно','Product designer рисует сценарии и серые макеты. Visual designer ищет рефы. Друг друга они не ждут.'],
+    ['S5-S',[['pd','drepo','flows.md, серые макеты']],'Серые макеты всех экранов','На них есть состояния и тексты по ключам, но нет цвета. Ошибку структуры здесь исправить дёшево.'],
+    ['S5-S',[['lead','ux','ревью структуры']],'Проверка до цвета','UX-ревьюер проходит сценарии и состояния: пусто, загрузка, ошибка, нет сети.'],
+    ['S5-1',[['vd','drepo','refs/board.html']],'Доска всех рефов','Источники по порядку: люди, Mobbin, Awwwards. Awwwards даёт только настроение. На доске видны все найденные рефы и кандидаты в семейства.'],
+    ['G2r',[['lead','owner','запрос G2r']],'Лидер останавливается','Раньше агенты выбирали рефы сами, и шесть проходов ушли не туда. Теперь семейства выбирает владелец.']],
+    gate:{k:'g2r',name:'Гейт G2r',code:'рефы',short:'Владелец выбирает семейства',pack:[['refs/board.html','все найденные рефы и кандидаты'],['семейства','группы рефов с одним характером'],['wireframe-check.md','итог ревью структуры']],text:'approve G2r refs: A, B, D',after:['Лидер ставит тег <code>gate/&lt;init&gt;/refs-v1</code>','Отклонённые семейства остаются на доске с пометкой','Лидер запускает базу']}},
+   {k:'s4',n:'ЭТАП 4',code:'S5-2',short:'3 экрана в вариантах, два ревью',title:'База: три экрана',sub:'S5-2. Три главных экрана задают весь визуальный язык.',rows:[
+    ['S5-2',[['lead','vd','база: 3 экрана']],'По варианту на семейство','Три экрана, iOS и Android, светлая и тёмная тема. Вариантов столько, сколько семейств утвердил владелец.'],
+    ['S5-2',[['vd','drepo','base/variant-a … d']],'Варианты в репозитории','Каждый вариант лежит отдельным файлом с экспортом.'],
+    ['S5-2',[['lead','dr','ревью вариантов'],['lead','ux','UX-ревью']],'Два независимых ревью','Ревьюеры макеты не правят. Они измеряют и пишут отчёт. Задача ревью закрывается done при любом вердикте.'],
+    ['S5-2',[['lead','owner','варианты и отчёты']],'Владелец смотрит варианты','Лидер показывает листы вариантов и итог двух ревью.'],
+    ['S5-2',[['owner','lead','состав по элементам']],'Выбор по элементам','Владелец берёт цвета из одного варианта, компоновку из другого, иконки из третьего.'],
+    ['S5-2',[['lead','vd','сшить один вариант']],'Сшивка','Дизайнер собирает один вариант и проверяет стыки. Затем идёт повторное ревью стыков.'],
+    ['G2a',[['vd','drepo','base/variant-mix'],['lead','owner','запрос G2a']],'Лидер останавливается','База готова. Дальше по ней строится всё остальное, поэтому здесь гейт.']],
+    gate:{k:'g2a',name:'Гейт G2a',code:'база',short:'Владелец утверждает базу',pack:[['листы базы','3 экрана, 2 платформы, 2 темы'],['variant-mix.md','что из какого варианта взято'],['отчёты ревью','дизайн и UX']],text:'approve G2a base v1',after:['Лидер ставит тег <code>gate/&lt;init&gt;/base-v1</code>','Лидер спрашивает, показать ли базу живому дизайнеру','Лидер запускает библиотеку']}},
+   {k:'s5',n:'ЭТАП 5',code:'S5-3',short:'Компоненты по базе',title:'Библиотека компонентов',sub:'S5-3. Гейта владельца нет.',rows:[
+    ['S5-3',[['lead','vd','библиотека по базе']],'Компоненты из утверждённой базы','Защищённые элементы бренда записаны в скилле дизайн-системы. Менять их без приказа владельца нельзя.'],
+    ['S5-3',[['vd','drepo','system/library.pen']],'Библиотека в репозитории','Экраны потом собираются только из этих компонентов.'],
+    ['S5-3',[['lead','dr','ревью библиотеки'],['lead','copy','новые ключи текстов']],'Ревью и тексты параллельно','Если в библиотеке появился новый текст, копирайтер добавляет ключ в strings.json.'],
+    ['S5-3',[['dr','drepo','library-review.md']],'Вердикт в отчёте','Ревью нашло блокер? Задача ревью всё равно закрыта: done.'],
+    ['S5-3',[['lead','vd','правки по ревью']],'Правки новым этапом','Правки идут новой задачей в следующем этапе. Старую задачу лидер назад не возвращает.'],
+    ['S5-3',[['vd','drepo','library v+1']],'Версия библиотеки','Каждая версия записана в versions.md. Лидер принимает и запускает экраны.']]},
+   {k:'s6',n:'ЭТАП 6',code:'S5-4, S6',short:'Эталоны, перенос, ревью',title:'Экраны: перенос и ревью',sub:'S5-4 перенос · S6 ревью. В конце гейт G2.',rows:[
+    ['S5-4',[['lead','pd','эталон каждой группы']],'Сначала по одному экрану','Экраны делятся на группы. Сначала дизайнер делает один эталонный экран в каждой группе.'],
+    ['S5-4',[['pd','drepo','эталоны групп'],['lead','dr','ревью эталонов']],'Контрольная точка','Дешевле поправить эталоны, чем все экраны. Поэтому ревью стоит здесь, а не в конце.'],
+    ['S5-4',[['lead','pd','перенос на все экраны']],'Перенос','Дизайнер собирает остальные экраны из библиотеки по эталону своей группы.'],
+    ['S5-4',[['pd','drepo','screens, экспорты']],'Все экраны в репозитории','Обе платформы, обе темы.'],
+    ['S6',[['lead','dr','ревью дизайна'],['lead','ux','UX-ревью']],'Финальное ревью','UX-ревьюер проходит главный сценарий за каждую персону из PRD и проверяет доступность.'],
+    ['S6',[['lead','pd','правки по ревью']],'Правки','Правки идут новым этапом. После них ревью проверяет только исправленное.'],
+    ['G2',[['pd','drepo','пакет экспортов'],['lead','owner','запрос G2']],'Лидер останавливается','Он прикладывает пакет и итог ревью.']],
+    gate:{k:'g2',name:'Гейт G2',code:'дизайн',short:'Владелец принимает дизайн',pack:[['пакет экспортов','все экраны, 2 платформы, 2 темы'],['отчёты ревью','дизайн и UX, с оценками'],['versions.md','история версий базы и библиотеки']],text:'approve G2 design v1',after:['Лидер ставит тег <code>gate/&lt;init&gt;/design-v1</code>','Дизайн заморожен. Правки идут запросом на изменение','Инициатива идёт в команду разработки']}}
+  ];
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var playing=!reduce,gen=0,started=false,follow=true,rail={},ORDER=[];
+  var railEl=document.getElementById('rail'),scenesEl=document.getElementById('scenes');
+  var bPlay=document.getElementById('play'),bFollow=document.getElementById('follow');
+  function label(){bPlay.textContent=playing?'Пауза':'Пуск';}
+  function setFollow(v){follow=v;bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
+  function see(el,blk){if(reduce||!follow)return;try{el.scrollIntoView({behavior:'smooth',block:blk||'center'});}catch(e){}}
+  function setBub(m,k){m.bub.style.setProperty('--c',col(k));m.avEl.innerHTML=av(k);m.nm.textContent=ROLE[k][0];}
+  function railItem(k,name,code,short,gate,si,atGate){
+    ORDER.push(k);
+    var li=document.createElement('li');li.setAttribute('data-k',k);if(gate)li.className='gate';
+    var b=document.createElement('button');b.type='button';b.innerHTML=name+'<small>'+code+'</small><em>'+short+'</em>';li.appendChild(b);railEl.appendChild(li);rail[k]=li;
+    b.addEventListener('click',function(){setFollow(true);gen++;playing=true;started=true;label();run(gen,si,atGate);});
+  }
+  SC.forEach(function(s,si){
+    railItem(s.k,s.title.split(':')[0],s.code,s.short,false,si,false);
+    var sec=document.createElement('section');sec.className='scene';sec.id='st-'+s.k;
+    var used=[];s.rows.forEach(function(r){r[1].forEach(function(m){[m[0],m[1]].forEach(function(k){if(used.indexOf(k)<0)used.push(k);});});});
+    var h='<div class="inner"><div class="shead"><span class="k">'+s.n+'</span><h2></h2><p></p></div><div class="roles">'+used.map(function(k){return '<span class="role">'+av(k)+ROLE[k][0]+'</span>';}).join('')+'</div><div class="rws"></div>';
+    if(s.gate){var g=s.gate;h+='<div class="gcard"><div><h3>'+g.name+': что видит владелец</h3><ul>'+g.pack.map(function(p){return '<li><code>'+p[0]+'</code><span>'+p[1]+'</span></li>';}).join('')+'</ul></div><div><div class="cbox"><p class="who"><i>В</i>Владелец отвечает в задаче инициативы</p><div class="field"><span class="typed"></span></div><div class="send"><span>Отправить</span></div></div><ul class="after">'+g.after.map(function(a){return '<li>'+a+'</li>';}).join('')+'</ul></div></div>';}
+    else h+='<div class="nogate">Гейта здесь нет. Лидер принимает работу и сам запускает следующий этап.</div>';
+    sec.innerHTML=h+'</div>';sec.querySelector('h2').textContent=s.title;sec.querySelector('.shead p').textContent=s.sub;
+    var rws=sec.querySelector('.rws');s.R=[];
+    s.rows.forEach(function(r){
+      var row=document.createElement('div');row.className='grid row';
+      var tag=document.createElement('div');tag.className='tag';tag.textContent=r[0];
+      var area=document.createElement('div');area.className='area';var mvs=[];
+      r[1].forEach(function(m){
+        var hop=document.createElement('div');hop.className='hop';var self=m[0]===m[1];
+        var from=document.createElement('span');from.className='from';from.innerHTML=av(m[0])+ROLE[m[0]][0];
+        var arr=document.createElement('span');arr.className='arr';arr.textContent='→';
+        var bub=document.createElement('span');bub.className='bub'+(isRepo(m[1])?' file':'');
+        bub.innerHTML='<span class="avw"></span><span class="tx"><small></small><b></b></span><span class="st"></span>';bub.querySelector('b').textContent=m[2];
+        if(!self){hop.appendChild(from);hop.appendChild(arr);}hop.appendChild(bub);area.appendChild(hop);
+        var o={a:m[0],b:m[1],self:self,bub:bub,from:from,avEl:bub.querySelector('.avw'),nm:bub.querySelector('small'),done:isRepo(m[1])};setBub(o,o.b);mvs.push(o);
+      });
+      var note=document.createElement('div');note.className='note';note.innerHTML='<b></b><span></span>';note.firstChild.textContent=r[2];note.lastChild.textContent=r[3];
+      row.appendChild(tag);row.appendChild(area);row.appendChild(note);rws.appendChild(row);s.R.push({el:row,mvs:mvs});
+    });
+    s.el=sec;
+    if(s.gate){s.G={card:sec.querySelector('.gcard'),typed:sec.querySelector('.typed'),field:sec.querySelector('.field'),send:sec.querySelector('.send span'),after:[].slice.call(sec.querySelectorAll('.after li'))};railItem(s.gate.k,s.gate.name,s.gate.code,s.gate.short,true,si,true);}
+    scenesEl.appendChild(sec);
+  });
+  function railSet(on){var i=ORDER.indexOf(on);ORDER.forEach(function(k,j){rail[k].classList.toggle('on',j===i);rail[k].classList.toggle('done',j<i);});
+    var li=rail[on];if(li&&railEl.scrollWidth>railEl.clientWidth+4){try{railEl.scrollTo({left:li.offsetLeft-railEl.clientWidth/2+li.offsetWidth/2,behavior:reduce?'auto':'smooth'});}catch(e){railEl.scrollLeft=li.offsetLeft;}}}
+  function rowRest(r){r.el.className='grid row';r.mvs.forEach(function(m){m.bub.style.transition='none';m.bub.style.transform='none';setBub(m,m.b);m.bub.classList.toggle('done',m.done);m.bub.offsetWidth;m.bub.style.transition='';});}
+  function rowArm(r){r.el.className='grid row idle pre';r.mvs.forEach(function(m){m.bub.style.transition='none';m.bub.style.transform='none';setBub(m,m.a);m.bub.classList.remove('done');if(!m.self){var sh=m.bub.offsetLeft-m.from.offsetLeft;m.bub.style.transform='translateX(-'+sh+'px)';}m.bub.offsetWidth;m.bub.style.transition='';});}
+  function gateRest(s){if(!s.G)return;s.G.card.classList.remove('idle');s.G.typed.textContent=s.gate.text;s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.add('show');});}
+  function gateArm(s){if(!s.G)return;s.G.card.classList.add('idle');s.G.typed.textContent='';s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.remove('show');});}
+  function restAll(){SC.forEach(function(s){s.R.forEach(rowRest);gateRest(s);});railSet('s1');}
+  function wait(ms,my){return new Promise(function(res){var left=reduce?0:ms;(function tick(){if(my!==gen){res();return;}if(!playing){setTimeout(tick,120);return;}if(left<=0){res();return;}left-=60;setTimeout(tick,60);})();});}
+  function playRow(s,i,my){var r=s.R[i];
+    if(i>0)s.R[i-1].el.className='grid row';
+    r.el.className='grid row active pre';see(r.el);
+    return wait(700,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m){m.bub.style.transform='none';});return wait(450,my);})
+     .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){setBub(m,m.b);});return wait(650,my);})
+     .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){if(m.done)m.bub.classList.add('done');});return wait(2700,my);});
+  }
+  function playGate(s,my){var G=s.G,T=s.gate.text;
+    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');railSet(s.gate.k);see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
+    T.split('').forEach(function(ch,i){p=p.then(function(){if(my!==gen)return;G.typed.innerHTML=T.slice(0,i+1).replace(/</g,'&lt;')+'<span class="caret"></span>';return wait(85,my);});});
+    return p.then(function(){if(my!==gen)return;G.send.classList.add('go');return wait(900,my);})
+     .then(function(){if(my!==gen)return;G.typed.textContent=T;G.field.classList.remove('focus');G.send.classList.remove('go');G.after[0].classList.add('show');return wait(1100,my);})
+     .then(function(){if(my!==gen)return;G.after[1].classList.add('show');return wait(1100,my);})
+     .then(function(){if(my!==gen)return;G.after[2].classList.add('show');return wait(2200,my);});
+  }
+  function run(my,from,atGate){
+    from=from||0;
+    SC.forEach(function(s,si){if(si<from||(si===from&&atGate)){s.R.forEach(rowRest);if(si<from)gateRest(s);else gateArm(s);}else{s.R.forEach(rowArm);gateArm(s);}});
+    var p=Promise.resolve();
+    SC.forEach(function(s,si){if(si<from)return;
+      var skipRows=(si===from&&atGate);
+      p=p.then(function(){if(my!==gen)return;railSet(s.k);if(!skipRows){see(s.el,'start');return wait(1100,my);}});
+      if(!skipRows)s.R.forEach(function(r,i){p=p.then(function(){if(my!==gen)return;return playRow(s,i,my);});});
+      p=p.then(function(){if(my!==gen)return;s.R[s.R.length-1].el.className='grid row';});
+      if(s.G)p=p.then(function(){if(my!==gen)return;return playGate(s,my);});
+      else p=p.then(function(){if(my!==gen)return;return wait(1200,my);});
+    });
+    return p.then(function(){if(my!==gen)return;return wait(6000,my);}).then(function(){if(my!==gen)return;run(my,0,false);});
+  }
+  bFollow.addEventListener('click',function(){setFollow(!follow);});
+  var bTheme=document.getElementById('theme'),root=document.documentElement,hostTheme=root.getAttribute('data-theme'),TH=['auto','light','dark'],TN={auto:'авто',light:'светлая',dark:'тёмная'},ti=0;
+  try{var sv=localStorage.getItem('flow-theme');if(sv&&TH.indexOf(sv)>=0)ti=TH.indexOf(sv);}catch(e){}
+  function applyTheme(){var v=TH[ti];if(v==='auto'){if(hostTheme)root.setAttribute('data-theme',hostTheme);else root.removeAttribute('data-theme');}else root.setAttribute('data-theme',v);bTheme.textContent='Тема: '+TN[v];}
+  bTheme.addEventListener('click',function(){ti=(ti+1)%3;applyTheme();try{localStorage.setItem('flow-theme',TH[ti]);}catch(e){}});
+  applyTheme();
+  ['wheel','touchmove'].forEach(function(e){window.addEventListener(e,function(){if(follow)setFollow(false);},{passive:true});});
+  window.addEventListener('keydown',function(e){if(follow&&['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].indexOf(e.key)>=0&&e.target.tagName!=='BUTTON')setFollow(false);});
+  bPlay.addEventListener('click',function(){playing=!playing;label();if(playing&&!started){started=true;run(gen,0,false);}});
+  document.getElementById('restart').addEventListener('click',function(){setFollow(true);gen++;playing=true;started=true;label();run(gen,0,false);});
+  label();restAll();
+  if(!reduce){started=true;setTimeout(function(){run(gen,0,false);},1600);}
+})();
+</script>
+</body>
+</html>
