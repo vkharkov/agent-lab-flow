@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Студия агентов</title>
+<meta name="description" content="Как 24 агента ведут продукт от идеи до дизайна. Анимации флоу и история живого проекта.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f8;--panel:#fff;--ink:#1a1c20;--muted:#6a6f7a;--line:#e3e5ea;--accent:#5560cf;--owner:#b4690e;
+  --display:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme: dark){:root{color-scheme:dark;--bg:#0e0f11;--panel:#15171a;--ink:#e7e8eb;--muted:#8a8f99;--line:#272a30;--accent:#8e97f2;--owner:#f0b257}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--display);font-size:16px;line-height:1.55}
+main{max-width:760px;margin:0 auto;padding:56px 20px 80px}
+.k{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.06em}
+h1{font-size:34px;line-height:1.15;font-weight:600;margin:10px 0 14px;text-wrap:balance}
+p{margin:0 0 14px;max-width:62ch;color:var(--muted)}
+.cards{display:grid;gap:14px;margin:34px 0 0}
+a.card,div.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;text-decoration:none;color:inherit}
+a.card:hover{border-color:var(--accent)}
+a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card h2{font-size:19px;font-weight:600;margin:0 0 6px}
+.card p{margin:0;font-size:14.5px}
+.card .go{display:inline-block;margin-top:12px;font-size:14px;font-weight:500;color:var(--accent)}
+.card.soon{opacity:.6}
+.card.soon .go{color:var(--owner)}
+footer{margin-top:40px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:520px){main{padding:32px 16px 60px}h1{font-size:27px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="k">СТУДИЯ АГЕНТОВ</div>
+  <h1>Как агенты ведут продукт от идеи до дизайна</h1>
+  <p>Один человек и 24 агента в трёх командах. Человек решает на гейтах. Агенты делают работу между гейтами и передают задачи друг другу.</p>
+  <p>Здесь лежат анимации: как устроен флоу и как он прошёл на живом проекте.</p>
+  <div class="cards">
+    <a class="card" href="flow/">
+      <h2>Флоу студии по этапам</h2>
+      <p>Шесть этапов, четыре гейта, 14 ролей. Видно, кто кому передаёт задачу и где работа ждёт владельца.</p>
+      <span class="go">Смотреть анимацию →</span>
+    </a>
+    <div class="card soon">
+      <h2>История живого проекта</h2>
+      <p>Та же анимация по настоящей истории задач: десять проходов дизайна, остановки, время и расход.</p>
+      <span class="go">Готовится</span>
+    </div>
+  </div>
+  <footer>Платформа: self-hosted Multica и Claude Code. Страницы статические, без сборки и без сервера.</footer>
+</main>
+</body>
+</html>
