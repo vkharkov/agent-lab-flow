@@ -35,7 +35,7 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.5}
-.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 20px 80px}
 header{margin:0 0 22px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
 h1{font-size:26px;line-height:1.2;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .lead{color:var(--muted);margin:0;max-width:62ch}
@@ -46,9 +46,14 @@ button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);bord
 button:hover{border-color:var(--muted)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:500}
-.layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:28px;align-items:start}
+.layout{display:grid;grid-template-columns:236px minmax(0,1fr) 176px;gap:28px;align-items:start}
 /* rail */
-.rail{position:sticky;top:16px;list-style:none;margin:0;padding:6px 0 6px 0}
+.railwrap{position:sticky;top:16px}
+.burger{display:none;flex:none;width:36px;height:32px;padding:0;align-items:center;justify-content:center;font-size:18px;line-height:1}
+.rail{list-style:none;margin:0;padding:6px 0 6px 0}
+.ctl{position:sticky;top:16px;display:flex;flex-direction:column;gap:8px}
+.ctl button{width:100%;text-align:left}
+.ctl .back{position:static;order:-1;box-shadow:none;border-radius:6px;justify-content:center;width:100%}
 .rail li{position:relative;padding:0 0 0 30px;font-size:13.5px;color:var(--muted);transition:color .3s}
 .rail button{all:unset;display:block;width:100%;padding:7px 8px 8px 0;cursor:pointer;border-radius:6px}
 .rail button:hover{color:var(--ink)}
@@ -141,10 +146,12 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
 .stub ol{margin:8px 0 0;padding-left:20px;color:var(--ink)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);padding:12px 22px;border-top:1px solid var(--line)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
-@media (max-width:860px){
-  .wrap{padding:14px 12px 60px} h1{font-size:21px} header{margin-bottom:12px}
+@media (max-width:1100px){
+  .wrap{padding:14px 12px 60px}
   .layout{grid-template-columns:minmax(0,1fr);gap:12px}
-  .rail{position:sticky;top:0;z-index:5;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;background:var(--bg);margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line);scrollbar-width:none}
+  .railwrap{position:sticky;top:0;z-index:7;display:flex;align-items:center;gap:8px;background:var(--bg);margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .burger{display:inline-flex}
+  .rail{flex:1;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:0;scrollbar-width:none}
   .rail::-webkit-scrollbar{display:none}
   .rail li{padding:0;flex:none} .rail li::before,.rail li::after{display:none}
   .rail button{padding:5px 11px;border:1px solid var(--line);border-radius:14px;font-size:12.5px;white-space:nowrap;width:auto;background:var(--panel)}
@@ -153,13 +160,19 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   .rail li.gate.on button{border-color:var(--owner);background:var(--owner-bg)}
   .rail li.done button{color:var(--ink)}
   .scene{scroll-margin-top:56px;margin-bottom:16px}
+  .ctl{position:absolute;left:0;right:0;top:100%;z-index:6;display:none;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 8px 18px rgba(0,0,0,.14)}
+  .ctl.open{display:grid}
+  .ctl button{text-align:center}
+}
+@media (max-width:860px){
+  h1{font-size:21px} header{margin-bottom:12px}
   .inner{min-width:0}
   .shead{padding:14px 14px 12px;gap:8px 12px} .shead h2{font-size:17px}
   .roles{padding:10px 14px}
-  .grid{grid-template-columns:40px minmax(0,1fr)}
-  .row .tag{padding:14px 0 0 10px;font-size:10.5px}
+  .grid{grid-template-columns:44px minmax(0,1fr)}
+  .row .tag{padding:14px 0 0 8px;font-size:10.5px}
   .row .area{padding:12px 12px 8px 4px}
-  .row .note{grid-column:1 / -1;border-left:0;padding:0 14px 12px 44px}
+  .row .note{grid-column:1 / -1;border-left:0;padding:0 14px 12px 48px}
   .hop{flex-direction:column;align-items:flex-start;gap:4px;min-height:0}
   .arr{display:none}
   .bub{white-space:normal;max-width:100%}
@@ -167,6 +180,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   .gcard li code{min-width:0;flex:none;max-width:45%}
   .field{font-size:13px}
   .nogate{padding:12px 14px}
+  .sum{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion: reduce){.bub,.from,.arr,.row,.after li{transition:none}.caret{animation:none}}
 
@@ -189,20 +203,20 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
       <p class="about"><b>agent-lab</b> — это набор для запуска студии агентов на своём сервере: роли, скиллы, скрипты установки и правила работы. Он поднимает 24 агента Claude Code в трёх командах и ведёт продукт от идеи до релиза через гейты, где решает человек. Здесь показана первая половина пути: от идеи до готового дизайна.</p>
       <p class="lead">Время идёт сверху вниз. Плашка задачи красится в цвет того, кто её держит. На гейте работа ждёт владельца.</p>
     </div>
-    <div class="bar">
+  </header>
+  <div class="layout">
+    <div class="railwrap" id="railwrap"><button id="burger" class="burger" type="button" aria-expanded="false" aria-controls="ctl" aria-label="Управление анимацией">≡</button><ol class="rail" id="rail"></ol></div>
+    <div>
+      <div class="toplegend"><span><i></i>задача в работе</span><span><i style="background:var(--ok);border-color:var(--ok)"></i>задача done или файл в репозитории</span><span>Слева от плашки видно, от кого пришла задача</span></div>
+      <div id="scenes"></div>
+    </div>
+    <aside class="ctl" id="ctl" aria-label="Управление анимацией">
       <button class="primary" id="play" type="button">Пауза</button>
       <button id="restart" type="button">Сначала</button>
       <button id="follow" type="button" aria-pressed="true">Следить за шагом: да</button>
       <button id="speed" type="button" aria-label="Скорость анимации">Скорость: ×1</button>
       <button id="theme" type="button">Тема: авто</button>
-    </div>
-  </header>
-  <div class="layout">
-    <ol class="rail" id="rail"></ol>
-    <div>
-      <div class="toplegend"><span><i></i>задача в работе</span><span><i style="background:var(--ok);border-color:var(--ok)"></i>задача done или файл в репозитории</span><span>Слева от плашки видно, от кого пришла задача</span></div>
-      <div id="scenes"></div>
-    </div>
+    </aside>
   </div>
 </div>
 <button class="back" id="back" type="button"><i></i><span>К текущему шагу</span></button>
@@ -289,13 +303,21 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   function spy(){if(follow)return;var line=window.innerHeight*0.35,cur=SC[0].k;SC.forEach(function(s){if(!s.el)return;if(s.el.getBoundingClientRect().top<=line){cur=s.k;if(s.G&&s.G.card.getBoundingClientRect().top<=line)cur=s.gate.k;}});railSet(cur);}
   var spyT=0;window.addEventListener('scroll',function(){if(follow||spyT)return;spyT=setTimeout(function(){spyT=0;spy();},90);},{passive:true});
   var curEl=null,bBack=document.getElementById('back');
+  var ctl=document.getElementById('ctl'),burger=document.getElementById('burger'),wrapR=document.getElementById('railwrap'),mq=window.matchMedia('(max-width:1100px)');
+  var layoutEl=document.querySelector('.layout');
+  function place(){if(mq.matches){document.body.appendChild(bBack);wrapR.appendChild(ctl);}else{layoutEl.appendChild(ctl);ctl.appendChild(bBack);ctl.classList.remove('open');burger.setAttribute('aria-expanded','false');}}
+  if(mq.addEventListener)mq.addEventListener('change',place);else if(mq.addListener)mq.addListener(place);place();
+  function menu(v){ctl.classList.toggle('open',v);burger.setAttribute('aria-expanded',v?'true':'false');}
+  burger.addEventListener('click',function(e){e.stopPropagation();menu(!ctl.classList.contains('open'));});
+  document.addEventListener('click',function(e){if(mq.matches&&ctl.classList.contains('open')&&!ctl.contains(e.target))menu(false);});
   function backVis(){bBack.classList.toggle('show',!follow&&started&&!!curEl);}
   bBack.addEventListener('click',function(){setFollow(true);if(curEl)go(curEl,'center',true);});
   function setFollow(v){follow=v;setTimeout(backVis,0);if(v)railSet(animK);else setTimeout(spy,0);bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
   function see(el,blk){if(reduce||!follow)return;go(el,blk,true);}
   function go(el,blk,smooth){var r=el.getBoundingClientRect(),vh=window.innerHeight,se=document.scrollingElement||document.documentElement;
-    var off=(railEl.scrollWidth>railEl.clientWidth+4||getComputedStyle(railEl).display==='flex')?railEl.offsetHeight+8:12;
-    var top=(blk==='start')?r.top+se.scrollTop-off:r.top+se.scrollTop-Math.max(off,(vh-r.height)/2);
+    var wr=document.getElementById('railwrap'),off=(window.matchMedia('(max-width:1100px)').matches)?document.getElementById('rail').offsetHeight+24:12;
+    if(window.visualViewport&&window.visualViewport.height)vh=Math.min(vh,window.visualViewport.height);
+    var top=(blk==='start')?r.top+se.scrollTop-off:r.top+se.scrollTop-Math.max(off,Math.min((vh-r.height)/2,vh*0.32));
     top=Math.max(0,top);
     try{window.scrollTo({top:top,behavior:smooth?'smooth':'auto'});}catch(e){window.scrollTo(0,top);}
     try{if(Math.abs(se.scrollTop-top)>4&&se.scrollHeight<=se.clientHeight+4)el.scrollIntoView({behavior:smooth?'smooth':'auto',block:blk==='start'?'start':'center'});}catch(e){}}
@@ -359,12 +381,12 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   }
   function playRow(s,i,my){var r=s.R[i];
     if(i>0)s.R[i-1].el.className=s.R[i-1].base;
-    r.el.className=r.base+' active pre';curEl=r.el;see(r.el);
+    r.el.className=r.base+' active pre';curEl=r.el;backVis();see(r.el);
     return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait(1250+(r.mvs.length-1)*220,my);})
      .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){setBub(m,m.b);if(m.done)m.bub.classList.add('done');});return wait(2700,my);});
   }
   function playGate(s,my){var G=s.G,T=s.gate.text;
-    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);curEl=G.card;see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
+    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);curEl=G.card;backVis();see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
     T.split('').forEach(function(ch,i){p=p.then(function(){if(my!==gen)return;G.typed.innerHTML=T.slice(0,i+1).replace(/</g,'&lt;')+'<span class="caret"></span>';return wait(85,my);});});
     return p.then(function(){if(my!==gen)return;G.send.classList.add('go');return wait(900,my);})
      .then(function(){if(my!==gen)return;G.typed.textContent=T;G.field.classList.remove('focus');G.send.classList.remove('go');G.after[0].classList.add('show');return wait(1100,my);})
