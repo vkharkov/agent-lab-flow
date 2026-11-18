@@ -188,6 +188,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
       <button class="primary" id="play" type="button">Пауза</button>
       <button id="restart" type="button">Сначала</button>
       <button id="follow" type="button" aria-pressed="true">Следить за шагом: да</button>
+      <button id="speed" type="button" aria-label="Скорость анимации">Скорость: ×1</button>
       <button id="theme" type="button">Тема: авто</button>
     </div>
   </header>
@@ -273,7 +274,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
     gate:{k:'g2',name:'Гейт G2',code:'дизайн',short:'Владелец принимает дизайн',pack:[['пакет экспортов','все экраны, 2 платформы, 2 темы'],['отчёты ревью','дизайн и UX, с оценками'],['versions.md','история версий базы и библиотеки']],text:'approve G2 design v1',after:['Лидер ставит тег <code>gate/&lt;init&gt;/design-v1</code>','Дизайн заморожен. Правки идут запросом на изменение','Инициатива идёт в команду разработки']}}
   ];
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var playing=!reduce,gen=0,started=false,follow=true,rail={},ORDER=[];
+  var speed=1,playing=!reduce,gen=0,started=false,follow=true,rail={},ORDER=[];
   var railEl=document.getElementById('rail'),scenesEl=document.getElementById('scenes');
   var bPlay=document.getElementById('play'),bFollow=document.getElementById('follow');
   function label(){bPlay.textContent=playing?'Пауза':'Пуск';}
@@ -334,8 +335,8 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   function gateRest(s){if(!s.G)return;s.G.card.classList.remove('idle');s.G.typed.textContent=s.gate.text;s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.add('show');});}
   function gateArm(s){if(!s.G)return;s.G.card.classList.add('idle');s.G.typed.textContent='';s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.remove('show');});}
   function restAll(){SC.forEach(function(s){s.R.forEach(rowRest);gateRest(s);});railSet('s1');}
-  function wait(ms,my){return new Promise(function(res){var left=reduce?0:ms;(function tick(){if(my!==gen){res();return;}if(!playing){setTimeout(tick,120);return;}if(left<=0){res();return;}left-=60;setTimeout(tick,60);})();});}
-  function anim(el,kf,opt){try{if(el&&el.animate&&!reduce)return el.animate(kf,opt);}catch(e){}return null;}
+  function wait(ms,my){return new Promise(function(res){var left=reduce?0:ms/speed;(function tick(){if(my!==gen){res();return;}if(!playing){setTimeout(tick,120);return;}if(left<=0){res();return;}left-=60;setTimeout(tick,60);})();});}
+  function anim(el,kf,opt){try{if(el&&el.animate&&!reduce){if(opt.duration)opt.duration=opt.duration/speed;if(opt.delay)opt.delay=opt.delay/speed;return el.animate(kf,opt);}}catch(e){}return null;}
   function fly(m){
     var ring=[{boxShadow:'0 0 0 0 color-mix(in srgb,'+col(m.b)+' 60%,transparent)'},{boxShadow:'0 0 0 14px color-mix(in srgb,'+col(m.b)+' 0%,transparent)'}];
     if(m.self){m.bub.style.transform='none';anim(m.bub,[{transform:'scale(.9)'},{transform:'scale(1.06)',offset:.6},{transform:'scale(1)'}],{duration:520,easing:'ease-out'});anim(m.bub,ring,{duration:700,delay:300});return;}
@@ -344,13 +345,13 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
     anim(m.from,[{transform:'scale(1)'},{transform:'scale(1.14)',offset:.4},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});
     anim(m.bub,[{transform:'translate('+dx+'px,'+dy+'px) scale(.9) rotate(0deg)'},{transform:'translate('+(dx*.5+side)+'px,'+(dy*.5+lift)+'px) scale(1.07) rotate('+(lift?-3:0)+'deg)',offset:.55},{transform:'translate(0,0) scale(1) rotate(0deg)'}],{duration:950,easing:'cubic-bezier(.34,.72,.24,1)'});
     if(m.line){m.line.style.transform='';anim(m.line,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:700,easing:'ease-out'});}
-    setTimeout(function(){anim(m.avEl,[{transform:'rotateY(0deg)'},{transform:'rotateY(90deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:360,easing:'ease-in-out'});setTimeout(function(){setBub(m,m.b);},reduce?0:180);},reduce?0:400);
+    setTimeout(function(){anim(m.avEl,[{transform:'rotateY(0deg)'},{transform:'rotateY(90deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:360,easing:'ease-in-out'});setTimeout(function(){setBub(m,m.b);},reduce?0:180/speed);},reduce?0:400/speed);
     anim(m.bub,ring,{duration:700,delay:880,easing:'ease-out'});
   }
   function playRow(s,i,my){var r=s.R[i];
     if(i>0)s.R[i-1].el.className=s.R[i-1].base;
     r.el.className=r.base+' active pre';see(r.el);
-    return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220);});return wait(1250+(r.mvs.length-1)*220,my);})
+    return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait(1250+(r.mvs.length-1)*220,my);})
      .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){setBub(m,m.b);if(m.done)m.bub.classList.add('done');});return wait(2700,my);});
   }
   function playGate(s,my){var G=s.G,T=s.gate.text;
@@ -376,6 +377,8 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
     return p.then(function(){if(my!==gen)return;return wait(6000,my);}).then(function(){if(my!==gen)return;run(my,0,false);});
   }
   bFollow.addEventListener('click',function(){setFollow(!follow);});
+  var bSpeed=document.getElementById('speed'),SP=[1,2,4],spi=0;
+  bSpeed.addEventListener('click',function(){spi=(spi+1)%SP.length;speed=SP[spi];bSpeed.textContent='Скорость: ×'+speed;});
   var bTheme=document.getElementById('theme'),root=document.documentElement,hostTheme=root.getAttribute('data-theme'),TH=['auto','light','dark'],TN={auto:'авто',light:'светлая',dark:'тёмная'},ti=0;
   try{var sv=localStorage.getItem('flow-theme');if(sv&&TH.indexOf(sv)>=0)ti=TH.indexOf(sv);}catch(e){}
   function applyTheme(){var v=TH[ti];if(v==='auto'){if(hostTheme)root.setAttribute('data-theme',hostTheme);else root.removeAttribute('data-theme');}else root.setAttribute('data-theme',v);bTheme.textContent='Тема: '+TN[v];}
