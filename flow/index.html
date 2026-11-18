@@ -39,6 +39,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--display);font-size:
 header{margin:0 0 22px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
 h1{font-size:26px;line-height:1.2;font-weight:600;margin:0 0 4px;text-wrap:balance}
 .lead{color:var(--muted);margin:0;max-width:62ch}
+.about{margin:6px 0 10px;max-width:66ch}
+.about b{font-weight:600}
 .bar{display:flex;gap:8px;flex-wrap:wrap}
 button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
 button:hover{border-color:var(--muted)}
@@ -165,6 +167,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   <header>
     <div>
       <h1>Флоу студии по этапам</h1>
+      <p class="about"><b>agent-lab</b> — это набор для запуска студии агентов на своём сервере: роли, скиллы, скрипты установки и правила работы. Он поднимает 24 агента Claude Code в трёх командах и ведёт продукт от идеи до релиза через гейты, где решает человек. Здесь показана первая половина пути: от идеи до готового дизайна.</p>
       <p class="lead">Время идёт сверху вниз. Плашка задачи красится в цвет того, кто её держит. На гейте работа ждёт владельца.</p>
     </div>
     <div class="bar">
@@ -260,7 +263,11 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   var railEl=document.getElementById('rail'),scenesEl=document.getElementById('scenes');
   var bPlay=document.getElementById('play'),bFollow=document.getElementById('follow');
   function label(){bPlay.textContent=playing?'Пауза':'Пуск';}
-  function setFollow(v){follow=v;bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
+  var animK='s1';
+  function animSet(k){animK=k;if(follow)railSet(k);}
+  function spy(){if(follow)return;var line=window.innerHeight*0.35,cur=SC[0].k;SC.forEach(function(s){if(!s.el)return;if(s.el.getBoundingClientRect().top<=line){cur=s.k;if(s.G&&s.G.card.getBoundingClientRect().top<=line)cur=s.gate.k;}});railSet(cur);}
+  var spyT=0;window.addEventListener('scroll',function(){if(follow||spyT)return;spyT=setTimeout(function(){spyT=0;spy();},90);},{passive:true});
+  function setFollow(v){follow=v;if(v)railSet(animK);else setTimeout(spy,0);bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
   function see(el,blk){if(reduce||!follow)return;try{el.scrollIntoView({behavior:'smooth',block:blk||'center'});}catch(e){}}
   function setBub(m,k){m.bub.style.setProperty('--c',col(k));m.avEl.innerHTML=av(k);m.nm.textContent=ROLE[k][0];}
   function railItem(k,name,code,short,gate,si,atGate){
@@ -314,7 +321,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
      .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){if(m.done)m.bub.classList.add('done');});return wait(2700,my);});
   }
   function playGate(s,my){var G=s.G,T=s.gate.text;
-    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');railSet(s.gate.k);see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
+    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
     T.split('').forEach(function(ch,i){p=p.then(function(){if(my!==gen)return;G.typed.innerHTML=T.slice(0,i+1).replace(/</g,'&lt;')+'<span class="caret"></span>';return wait(85,my);});});
     return p.then(function(){if(my!==gen)return;G.send.classList.add('go');return wait(900,my);})
      .then(function(){if(my!==gen)return;G.typed.textContent=T;G.field.classList.remove('focus');G.send.classList.remove('go');G.after[0].classList.add('show');return wait(1100,my);})
@@ -327,7 +334,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
     var p=Promise.resolve();
     SC.forEach(function(s,si){if(si<from)return;
       var skipRows=(si===from&&atGate);
-      p=p.then(function(){if(my!==gen)return;railSet(s.k);if(!skipRows){see(s.el,'start');return wait(1100,my);}});
+      p=p.then(function(){if(my!==gen)return;animSet(s.k);if(!skipRows){see(s.el,'start');return wait(1100,my);}});
       if(!skipRows)s.R.forEach(function(r,i){p=p.then(function(){if(my!==gen)return;return playRow(s,i,my);});});
       p=p.then(function(){if(my!==gen)return;s.R[s.R.length-1].el.className='grid row';});
       if(s.G)p=p.then(function(){if(my!==gen)return;return playGate(s,my);});
