@@ -106,6 +106,8 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
 .shead:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .meta{display:flex;flex-wrap:wrap;gap:6px;width:100%}
 .meta span{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 7px}
+.hop{position:relative}
+.curse{position:absolute;left:0;top:-15px;z-index:4;background:var(--ink);color:var(--panel);font-family:var(--mono);font-weight:500;font-size:12px;line-height:1;padding:5px 9px;border-radius:10px 10px 10px 2px;white-space:nowrap;opacity:0;pointer-events:none;transform-origin:left bottom}
 .row.nudge .tag{color:var(--owner);font-weight:500}
 .row.nudge .note b{color:var(--owner)}
 .row.nudge .bub{border-style:dashed}
@@ -347,10 +349,13 @@ var DATA={"title": "Команды агентов и передачи между
     setTimeout(function(){anim(m.avEl,[{transform:'rotateY(0deg)'},{transform:'rotateY(90deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:360,easing:'ease-in-out'});setTimeout(function(){setBub(m,m.b);},reduce?0:180/speed);},reduce?0:400/speed);
     anim(m.bub,ring,{duration:700,delay:880,easing:'ease-out'});
   }
+  var CURSE=['Б#@^!','П@&#$!!','Ё#%&!','Ну #&@%!','@#$%!!','Да ё#@&!','Х@#$%!'],curseI=0;
+  function curse(m){var hop=m.bub.parentNode,c=hop.querySelector('.curse');if(!c){c=document.createElement('span');c.className='curse';c.setAttribute('aria-hidden','true');hop.appendChild(c);}c.textContent=CURSE[curseI++%CURSE.length];
+    anim(c,[{opacity:0,transform:'scale(.3) rotate(-12deg)'},{opacity:1,transform:'scale(1.25) rotate(4deg)',offset:.12},{opacity:1,transform:'scale(1) rotate(-3deg)',offset:.2},{opacity:1,transform:'scale(1.06) rotate(3deg)',offset:.3},{opacity:1,transform:'scale(1) rotate(-2deg)',offset:.4},{opacity:1,transform:'scale(1) rotate(0)',offset:.85},{opacity:0,transform:'scale(.9) translateY(-8px)'}],{duration:2600,easing:'ease-out'});}
   function playRow(s,i,my){var r=s.R[i];
     if(i>0)s.R[i-1].el.className=s.R[i-1].base;
     r.el.className=r.base+' active pre';curEl=r.el;backVis();see(r.el);
-    return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait(1250+(r.mvs.length-1)*220,my);})
+    return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');if(r.base.indexOf('nudge')>=0&&r.mvs.length)curse(r.mvs[0]);r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait(1250+(r.mvs.length-1)*220,my);})
      .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){setBub(m,m.b);if(m.done)m.bub.classList.add('done');if(r.base.indexOf('nudge')>=0)anim(m.bub,[{transform:'rotate(0)'},{transform:'rotate(-5deg) translateX(-4px)'},{transform:'rotate(5deg) translateX(4px)'},{transform:'rotate(-4deg) translateX(-3px)'},{transform:'rotate(4deg) translateX(3px)'},{transform:'rotate(0)'}],{duration:560,easing:'ease-in-out'});});return wait(2700,my);});
   }
   function playGate(s,my){var G=s.G,T=s.gate.text;
