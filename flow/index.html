@@ -174,6 +174,11 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
 .toplegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);margin:0 0 16px}
 .toplegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
 .nogate{padding:14px 22px;font-size:13px;color:var(--muted)}
+.back{position:fixed;right:16px;bottom:16px;z-index:20;display:none;align-items:center;gap:8px;padding:10px 16px;border-radius:22px;border:0;background:var(--accent);color:var(--panel);font-weight:500;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.22);cursor:pointer}
+.back.show{display:inline-flex}
+.back:hover{border:0;filter:brightness(1.08)}
+.back i{width:8px;height:8px;border-radius:50%;background:var(--panel);animation:bl 1.2s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.back i{animation:none}}
 </style>
 </head>
 <body>
@@ -200,6 +205,7 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
     </div>
   </div>
 </div>
+<button class="back" id="back" type="button"><i></i><span>К текущему шагу</span></button>
 <script>
 (function(){
   var ROLE={
@@ -282,7 +288,10 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   function animSet(k){animK=k;if(follow)railSet(k);}
   function spy(){if(follow)return;var line=window.innerHeight*0.35,cur=SC[0].k;SC.forEach(function(s){if(!s.el)return;if(s.el.getBoundingClientRect().top<=line){cur=s.k;if(s.G&&s.G.card.getBoundingClientRect().top<=line)cur=s.gate.k;}});railSet(cur);}
   var spyT=0;window.addEventListener('scroll',function(){if(follow||spyT)return;spyT=setTimeout(function(){spyT=0;spy();},90);},{passive:true});
-  function setFollow(v){follow=v;if(v)railSet(animK);else setTimeout(spy,0);bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
+  var curEl=null,bBack=document.getElementById('back');
+  function backVis(){bBack.classList.toggle('show',!follow&&started&&!!curEl);}
+  bBack.addEventListener('click',function(){setFollow(true);if(curEl)go(curEl,'center',true);});
+  function setFollow(v){follow=v;setTimeout(backVis,0);if(v)railSet(animK);else setTimeout(spy,0);bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
   function see(el,blk){if(reduce||!follow)return;go(el,blk,true);}
   function go(el,blk,smooth){var r=el.getBoundingClientRect(),vh=window.innerHeight,se=document.scrollingElement||document.documentElement;
     var off=(railEl.scrollWidth>railEl.clientWidth+4||getComputedStyle(railEl).display==='flex')?railEl.offsetHeight+8:12;
@@ -350,12 +359,12 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--p
   }
   function playRow(s,i,my){var r=s.R[i];
     if(i>0)s.R[i-1].el.className=s.R[i-1].base;
-    r.el.className=r.base+' active pre';see(r.el);
+    r.el.className=r.base+' active pre';curEl=r.el;see(r.el);
     return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait(1250+(r.mvs.length-1)*220,my);})
      .then(function(){if(my!==gen)return;r.mvs.forEach(function(m){setBub(m,m.b);if(m.done)m.bub.classList.add('done');});return wait(2700,my);});
   }
   function playGate(s,my){var G=s.G,T=s.gate.text;
-    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
+    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);curEl=G.card;see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
     T.split('').forEach(function(ch,i){p=p.then(function(){if(my!==gen)return;G.typed.innerHTML=T.slice(0,i+1).replace(/</g,'&lt;')+'<span class="caret"></span>';return wait(85,my);});});
     return p.then(function(){if(my!==gen)return;G.send.classList.add('go');return wait(900,my);})
      .then(function(){if(my!==gen)return;G.typed.textContent=T;G.field.classList.remove('focus');G.send.classList.remove('go');G.after[0].classList.add('show');return wait(1100,my);})
