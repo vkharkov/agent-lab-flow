@@ -10,8 +10,11 @@ PATTERNS=(
   'gh[pousr]_[A-Za-z0-9]{20,}|github_pat_|sk-[A-Za-z0-9_-]{20,}'     # tokens
   'claude\.ai/'                                                      # private links
 )
-# Add your own words (server domain, platform name, account name), one per line:
-EXTRA="${LEAK_WORDS_FILE:-tools/leak-words.txt}"
+# Your own forbidden words (server domain, product names, account name):
+#   LEAK_WORDS="word1,word2"  — from the environment or a repository secret, not from a file in the repo.
+#   LEAK_WORDS_FILE=path      — a local file, one word per line (do not commit it).
+EXTRA="${LEAK_WORDS_FILE:-}"
+IFS=',' read -r -a WORDS <<< "${LEAK_WORDS:-}"
 fail=0
 while IFS= read -r -d '' f; do
   for p in "${PATTERNS[@]}"; do
@@ -19,7 +22,11 @@ while IFS= read -r -d '' f; do
       echo "LEAK in $f (pattern: $p):"; echo "$hits" | sed 's/^/  /'; fail=1
     fi
   done
-  if [ -f "$EXTRA" ]; then
+  for w in "${WORDS[@]:-}"; do
+    [ -z "$w" ] && continue
+    if grep -q -i -F -e "$w" "$f"; then echo "LEAK in $f: a forbidden word from LEAK_WORDS"; fail=1; fi
+  done
+  if [ -n "$EXTRA" ] && [ -f "$EXTRA" ]; then
     while IFS= read -r w; do
       [ -z "$w" ] && continue
       if grep -q -i -F -e "$w" "$f"; then echo "LEAK in $f: word '$w'"; fail=1; fi

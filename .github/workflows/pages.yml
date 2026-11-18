@@ -19,11 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check for internal data
+        env:
+          LEAK_WORDS: ${{ secrets.LEAK_WORDS }}
         run: bash tools/leak-check.sh .
       - name: Collect the site
         run: |
           mkdir _site
-          cp -R index.html flow history squads .nojekyll _site/
+          cp -R index.html flow squads .nojekyll _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
