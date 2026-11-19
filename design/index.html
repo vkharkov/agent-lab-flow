@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Реальный ход последнего цикла дизайна: рефы, база, библиотека, эталоны, перенос, ревью, сторы, пакет и четыре остановки, где решает владелец.">
+<meta property="og:title" content="Как агенты делают дизайн: все стадии">
+<meta property="og:description" content="Реальный ход последнего цикла дизайна: рефы, база, библиотека, эталоны, перенос, ревью, сторы, пакет и четыре остановки, где решает владелец.">
+<title>Как агенты делают дизайн: все стадии</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: sticky vertical rail of stages on the left; on the right one scene per stage: swimlanes of actors, time runs down, a gate card closes the stage. */
+:root{
+  --bg:#f7f7f8; --panel:#ffffff; --ink:#1a1c20; --muted:#6a6f7a; --line:#e3e5ea; --tint:#f1f2fb;
+  --accent:#5560cf; --owner:#b4690e; --owner-bg:#fdf1dc; --ok:#1f8f5f; --repo:#7a52c7; --bad:#c0392f;
+  --r-owner:#b4690e; --r-lead:#5560cf; --r-res:#0f8a7e; --r-idea:#c2417f; --r-po:#2f7fd1; --r-arch:#5f6b7a; --r-repo:#7a52c7; --r-pa:#8a5a2b; --r-mk:#cf5a1e; --r-copy:#7b7f16; --r-pd:#0b86a6; --r-vd:#a945c9; --r-dr:#c6453f; --r-ux:#2f9a4f;
+  --display:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e0f11; --panel:#15171a; --ink:#e7e8eb; --muted:#8a8f99; --line:#272a30; --tint:#1b1d2b;
+    --accent:#8e97f2; --owner:#f0b257; --owner-bg:#3a2a10; --ok:#4cc38a; --repo:#b393f0; --bad:#ff8f86;
+    --r-owner:#f0b257; --r-lead:#8e97f2; --r-res:#4fd0c2; --r-idea:#f08cba; --r-po:#74b4f5; --r-arch:#a3adba; --r-repo:#b393f0; --r-pa:#d9a877; --r-mk:#f59a66; --r-copy:#cfd45a; --r-pd:#5cc8e6; --r-vd:#d79af0; --r-dr:#f58d86; --r-ux:#73d590;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e0f11; --panel:#15171a; --ink:#e7e8eb; --muted:#8a8f99; --line:#272a30; --tint:#1b1d2b;
+  --accent:#8e97f2; --owner:#f0b257; --owner-bg:#3a2a10; --ok:#4cc38a; --repo:#b393f0; --bad:#ff8f86;
+    --r-owner:#f0b257; --r-lead:#8e97f2; --r-res:#4fd0c2; --r-idea:#f08cba; --r-po:#74b4f5; --r-arch:#a3adba; --r-repo:#b393f0; --r-pa:#d9a877; --r-mk:#f59a66; --r-copy:#cfd45a; --r-pd:#5cc8e6; --r-vd:#d79af0; --r-dr:#f58d86; --r-ux:#73d590;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 20px 80px}
+header{margin:0 0 22px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-size:26px;line-height:1.2;font-weight:600;margin:0 0 4px;text-wrap:balance}
+.lead{color:var(--muted);margin:0;max-width:62ch}
+.about{margin:6px 0 10px;max-width:66ch}
+.about b{font-weight:600}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:500}
+.layout{display:grid;grid-template-columns:236px minmax(0,1fr) 176px;gap:28px;align-items:start}
+/* rail */
+.railwrap{position:sticky;top:16px}
+.burger{display:none;flex:none;width:36px;height:32px;padding:0;align-items:center;justify-content:center;font-size:18px;line-height:1}
+.rail{list-style:none;margin:0;padding:6px 0 6px 0}
+.ctl{position:sticky;top:16px;display:flex;flex-direction:column;gap:8px}
+.ctl button{width:100%;text-align:left}
+.jump{display:flex;flex-direction:column;gap:6px;order:-2;padding-bottom:10px;margin-bottom:2px;border-bottom:1px solid var(--line)}
+.jump:empty{display:none}
+.jump b{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.jump button{font-size:13px;padding:6px 10px}
+.jump button.anim{border-color:var(--accent);color:var(--accent)}
+.ctl .back{position:static;order:-1;box-shadow:none;border-radius:6px;justify-content:center;width:100%}
+.rail li{position:relative;padding:0 0 0 30px;font-size:13.5px;color:var(--muted);transition:color .3s}
+.rail button{all:unset;display:block;width:100%;padding:7px 8px 8px 0;cursor:pointer;border-radius:6px}
+.rail button:hover{color:var(--ink)}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rail li em{display:block;font-style:normal;font-weight:400;font-size:12px;line-height:1.35;color:var(--muted);margin-top:1px}
+.rail li::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:var(--line)}
+.rail li:first-child::before{top:14px}.rail li:last-child::before{bottom:calc(100% - 14px)}
+.rail li::after{content:"";position:absolute;left:5px;top:11px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:1.5px solid var(--muted);transition:all .3s}
+.rail li.gate::after{border-radius:2px;transform:rotate(45deg);width:9px;height:9px;left:6px;top:12px;border-color:var(--owner)}
+.rail li.gate{color:var(--owner)}
+.rail li small{font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:400;margin-left:6px}
+.rail li.on{color:var(--ink);font-weight:600}
+.rail li.on::after{border-color:var(--accent);box-shadow:0 0 0 4px var(--tint)}
+.rail li.gate.on::after{border-color:var(--owner);box-shadow:0 0 0 4px var(--owner-bg)}
+.rail li.done::after{background:var(--ok);border-color:var(--ok)}
+.rail li.done{color:var(--ink)}
+/* scene */
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin:0 0 28px}
+.inner{min-width:660px}
+.shead{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.shead .k{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 6px}
+.shead h2{font-size:19px;font-weight:600;margin:0}
+.shead p{margin:0;color:var(--muted);font-size:13.5px}
+.grid{display:grid;grid-template-columns:72px minmax(0,1fr) 290px}
+.roles{display:flex;flex-wrap:wrap;gap:6px 8px;padding:12px 22px;border-bottom:1px solid var(--line)}
+.role{--c:var(--accent);display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px 3px 4px;border-radius:12px;border:1px solid var(--line);color:var(--muted)}
+.av{--c:var(--accent);width:22px;height:22px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--c);color:var(--panel)}
+.av svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.role .av{width:18px;height:18px}.role .av svg{width:11px;height:11px}
+.row{border-bottom:1px solid var(--line);transition:opacity .4s,background .4s}
+.row .tag{font-family:var(--mono);font-size:11px;color:var(--muted);padding:16px 0 0 12px}
+.row .area{padding:22px 14px 12px 6px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.row .note{padding:12px 18px 12px 16px;font-size:13px;line-height:1.4;border-left:1px solid var(--line)}
+.row .note b{display:block;font-weight:600;margin-bottom:2px}
+.row .note span{color:var(--muted)}
+.row.idle{opacity:.3}
+.row.active{background:var(--tint)}
+.row.active .note span{color:var(--ink)}
+.hop{display:flex;align-items:center;gap:8px;min-height:42px}
+.from{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;transition:opacity .5s}
+.from .av{width:18px;height:18px;opacity:.75}.from .av svg{width:11px;height:11px}
+.arr{transition:opacity .4s}
+.bub{--c:var(--accent);display:inline-flex;align-items:center;gap:9px;padding:5px 14px 5px 6px;border-radius:22px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 13%,var(--panel));transition:border-color .35s,background-color .35s;white-space:nowrap;will-change:transform}
+.bub .avw{display:inline-flex}
+.arr{position:relative;width:26px;height:10px;flex:none}
+.arr i{position:absolute;left:0;right:3px;top:4.25px;height:1.5px;background:var(--muted);transform-origin:left center;border-radius:1px}
+.arr::after{content:"";position:absolute;right:1px;top:1.5px;width:6px;height:6px;border-top:1.5px solid var(--muted);border-right:1.5px solid var(--muted);transform:rotate(45deg)}
+.shead{cursor:pointer}
+.shead:hover h2{color:var(--accent)}
+.shead:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+.meta span{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 7px}
+.hop{position:relative}
+.curse{position:absolute;left:0;top:-36px;max-width:92vw;z-index:4;background:var(--ink);color:var(--panel);font-family:var(--mono);font-weight:600;font-size:16px;line-height:1;padding:8px 13px;border-radius:13px 13px 13px 2px;box-shadow:0 4px 12px rgba(0,0,0,.22);white-space:nowrap;opacity:0;pointer-events:none;transform-origin:left bottom}
+.plac{padding:18px 22px 6px}
+.ptop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 24px;flex-wrap:wrap;min-height:70px;margin-bottom:10px}
+.pleads{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.pc{display:flex;align-items:center;gap:10px;opacity:0;transform:translateX(-24px);transition:opacity .35s,transform .35s}
+.pc.ld{transform:translateX(24px)}
+.pc.in{opacity:1;transform:none}
+.pw{display:flex;flex-direction:column;align-items:center;gap:3px;width:96px;flex:none}
+.pw .av{width:40px;height:40px}.pw .av svg{width:22px;height:22px}
+.sn{font-size:11px;line-height:1.2;text-align:center;color:var(--c);font-weight:600}
+.pb{background:var(--ink);color:var(--panel);font-family:var(--mono);font-weight:600;font-size:16px;line-height:1.2;padding:8px 13px;border-radius:13px 13px 13px 2px;box-shadow:0 4px 12px rgba(0,0,0,.22);opacity:0;transition:opacity .2s;transform-origin:left center}
+.pc.ld .pb{background:color-mix(in srgb,var(--c) 14%,var(--panel));color:var(--ink);border:1.5px solid var(--c);font-family:var(--display);font-weight:500;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+.pb.show,.sb.show{opacity:1}
+.ranks{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:4px 8px;padding:10px 0 12px;border-top:1px dashed var(--line)}
+.sold{display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0;transform:translateY(10px) scale(.8);transition:opacity .3s,transform .3s}
+.sold.in{opacity:1;transform:none}
+.sold .av{width:34px;height:34px;transform-origin:center bottom}.sold .av svg{width:19px;height:19px}
+.sbw{height:48px;display:flex;align-items:flex-end;justify-content:center;width:100%}
+.sb{font-size:11.5px;line-height:1.2;text-align:center;padding:4px 7px;border-radius:9px 9px 9px 2px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 12%,var(--panel));opacity:0;transition:opacity .2s;transform-origin:center bottom}
+.fig{margin:6px 0 2px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0b0c0f;transition:opacity .45s,transform .45s}
+.fig.hid{opacity:0;transform:translateY(8px)}
+.fig img{display:block;width:100%;height:auto}
+.fig.narrow{max-width:230px}
+.fig figcaption{font-size:12px;color:var(--muted);padding:6px 10px;background:var(--panel);border-top:1px solid var(--line)}
+.term{margin:2px 0 0;border-radius:8px;background:#14171c;color:#d7dbe2;font-family:var(--mono);font-size:12px;line-height:1.55;overflow:hidden;border:1px solid #2a2f37}
+.term .th{display:flex;align-items:center;gap:6px;padding:5px 10px;background:#1c2027;color:#8b93a1;font-size:11px}
+.term .th i{width:8px;height:8px;border-radius:50%;background:#3a414c}
+.term pre{margin:0;padding:9px 12px 10px;white-space:pre-wrap;word-break:break-word;font:inherit;min-height:1.55em}
+.term .pr{color:#6fd3a5}.term .cm{color:#8b93a1}.term .ok{color:#6fd3a5}
+.term .cur{display:inline-block;width:7px;height:13px;background:#d7dbe2;vertical-align:-2px;animation:bl 1s steps(1) infinite}
+.reply{position:absolute;z-index:4;max-width:92vw;background:var(--panel);color:var(--ink);border:1px solid var(--muted);font-size:15px;line-height:1;padding:7px 12px;border-radius:2px 13px 13px 13px;white-space:nowrap;opacity:0;pointer-events:none;transform-origin:left top;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+.row.nudge .area{padding-top:44px;padding-bottom:44px}
+.curse.soft{top:-17px;font-size:12px;border-radius:10px 10px 10px 2px;background:var(--panel);color:var(--ink);border:1px solid var(--muted);font-family:var(--display);font-weight:400;padding:4px 9px;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+.row.nudge .tag{color:var(--owner);font-weight:500}
+.row.nudge .note b{color:var(--owner)}
+.row.nudge .bub{border-style:dashed}
+.row.stop{background:color-mix(in srgb,var(--bad) 7%,var(--panel))}
+.row.stop .tag{color:var(--bad);font-weight:500}
+.row.stop .note b{color:var(--bad)}
+.row.stop.active{background:color-mix(in srgb,var(--bad) 14%,var(--panel))}
+.gcard h3{cursor:pointer}
+.bub .av{width:28px;height:28px;transition:background-color .45s}.bub .av svg{width:16px;height:16px}
+.bub .tx{display:flex;flex-direction:column;line-height:1.2}
+.bub .tx small{font-size:11px;color:var(--c);font-weight:600;transition:color .45s}
+.bub .tx b{font-size:13.5px;font-weight:500}
+.bub.file .tx b{font-family:var(--mono);font-size:12.5px}
+.bub .st{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);margin-left:2px;flex:none}
+.bub.done .st{background:var(--ok);border-color:var(--ok)}
+.row.pre .from,.row.pre .arr{opacity:0}
+/* gate */
+.gcard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;padding:20px 22px 22px;background:var(--panel);transition:opacity .4s}
+.gcard.idle{opacity:.3}
+.gcard h3{font-size:15px;font-weight:600;margin:0 0 8px;color:var(--owner)}
+.gcard ul{margin:0;padding:0;list-style:none;font-size:13px}
+.gcard li{padding:5px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}
+.gcard li code{font-family:var(--mono);font-size:12px;min-width:118px;color:var(--repo)}
+.gcard li span{color:var(--muted)}
+.cbox{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:12px}
+.cbox .who{font-size:12px;color:var(--muted);margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.cbox .who i{width:20px;height:20px;border-radius:50%;background:var(--owner);color:var(--panel);font-style:normal;font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.field{font-family:var(--mono);font-size:14px;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);display:flex;align-items:center}
+.field.focus{border-color:var(--owner);box-shadow:0 0 0 3px var(--owner-bg)}
+.caret{display:inline-block;width:1.5px;height:17px;background:var(--ink);margin-left:1px;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.send{margin-top:8px;display:flex;justify-content:flex-end}
+.send span{font-size:12.5px;font-weight:500;padding:6px 12px;border-radius:6px;background:var(--line);color:var(--muted);transition:all .25s}
+.send span.go{background:var(--owner);color:var(--panel)}
+.after{list-style:none;margin:12px 0 0;padding:0;font-size:13px}
+.after li{display:flex;gap:9px;align-items:baseline;padding:4px 0;opacity:0;transform:translateY(4px);transition:all .4s}
+.after li.show{opacity:1;transform:none}
+.after li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;position:relative;top:-1px}
+.after code{font-family:var(--mono);font-size:12px}
+.stub{padding:18px 22px 22px;color:var(--muted);font-size:13.5px}
+.stub ol{margin:8px 0 0;padding-left:20px;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);padding:12px 22px;border-top:1px solid var(--line)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
+@media (max-width:1100px){
+  .wrap{padding:14px 12px 60px}
+  .layout{grid-template-columns:minmax(0,1fr);gap:12px}
+  .railwrap{position:sticky;top:0;z-index:7;display:flex;align-items:center;gap:8px;background:var(--bg);margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .burger{display:inline-flex}
+  .rail{flex:1;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:0;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .rail li{padding:0;flex:none} .rail li::before,.rail li::after{display:none}
+  .rail button{padding:5px 11px;border:1px solid var(--line);border-radius:14px;font-size:12.5px;white-space:nowrap;width:auto;background:var(--panel)}
+  .rail li em,.rail li small{display:none}
+  .rail li.on button{border-color:var(--accent);background:var(--tint)}
+  .rail li.gate.on button{border-color:var(--owner);background:var(--owner-bg)}
+  .rail li.done button{color:var(--ink)}
+  .scene{scroll-margin-top:56px;margin-bottom:16px}
+  .ctl{position:absolute;left:0;right:0;top:100%;z-index:6;display:none;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 8px 18px rgba(0,0,0,.14)}
+  .ctl.open{display:grid}
+  .jump{grid-column:1/-1;order:0;display:grid;grid-template-columns:1fr 1fr}
+  .jump b{grid-column:1/-1}
+  .ctl button{text-align:center}
+}
+@media (max-width:860px){
+  h1{font-size:21px} header{margin-bottom:12px}
+  .inner{min-width:0}
+  .shead{padding:14px 14px 12px;gap:8px 12px} .shead h2{font-size:17px}
+  .roles{padding:10px 14px}
+  .grid{grid-template-columns:58px minmax(0,1fr)}
+  .row .tag{padding:14px 0 0 8px;font-size:10.5px}
+  .row .area{padding:22px 12px 8px 4px}
+  .row .note{grid-column:1 / -1;border-left:0;padding:0 14px 12px 62px}
+  .hop{flex-direction:column;align-items:flex-start;gap:4px;min-height:0}
+  .arr{display:none}
+  .bub{white-space:normal;max-width:100%}
+  .gcard{grid-template-columns:minmax(0,1fr);padding:16px 14px}
+  .gcard li code{min-width:0;flex:none;max-width:45%}
+  .field{font-size:13px}
+  .nogate{padding:12px 14px}
+  .sum{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion: reduce){.bub,.from,.arr,.row,.after li{transition:none}.caret{animation:none}}
+
+.scene{scroll-margin-top:12px}
+.toplegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);margin:0 0 16px}
+.toplegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1.5px solid var(--accent)}
+.nogate{padding:14px 22px;font-size:13px;color:var(--muted)}
+.cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin:0 0 18px;padding:16px 20px;border:1.5px solid var(--accent);border-radius:10px;background:var(--tint)}
+.cta span{font-size:16px;font-weight:500}
+.cta button{font-size:15px;padding:9px 18px}
+.cta.hide{display:none}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.sum div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.sum b{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.sum span{font-size:12.5px;color:var(--muted)}
+.tbl>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin:0 0 18px;overflow-x:auto}
+.tbl h3{font-size:15px;font-weight:600;margin:0;padding:12px 16px 2px}
+.tbl p{font-size:12.5px;color:var(--muted);margin:0;padding:0 16px 10px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-size:11.5px;font-weight:500;color:var(--muted);text-align:left;padding:8px 16px;border-top:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 16px;border-top:1px solid var(--line);vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl td small{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.tbl tr.tot td{font-weight:600;background:color-mix(in srgb,var(--accent) 6%,var(--panel))}
+@media (max-width:860px){.tbl th{white-space:normal}.tbl td,.tbl th{padding:8px 9px}.tbl h3,.tbl p{padding-left:12px;padding-right:12px}.tbl td small{display:none}}
+.back{position:fixed;right:16px;bottom:16px;z-index:20;display:none;align-items:center;gap:8px;padding:10px 16px;border-radius:22px;border:0;background:var(--accent);color:var(--panel);font-weight:500;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.22);cursor:pointer}
+.back.show{display:inline-flex}
+.back:hover{border:0;filter:brightness(1.08)}
+.back i{width:8px;height:8px;border-radius:50%;background:var(--panel);animation:bl 1.2s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.back i{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="h-title"></h1>
+      <p class="about" id="h-about"></p>
+      <p class="lead" id="h-lead"></p>
+    </div>
+  </header>
+  <div class="layout">
+    <div class="railwrap" id="railwrap"><button id="burger" class="burger" type="button" aria-expanded="false" aria-controls="ctl" aria-label="Управление анимацией">≡</button><ol class="rail" id="rail"></ol></div>
+    <div>
+      <div class="toplegend"><span><i></i>задача в работе</span><span><i style="background:var(--ok);border-color:var(--ok)"></i>задача done или файл в репозитории</span><span>Слева от плашки видно, от кого пришла задача</span></div>
+      <div class="sum" id="sum"></div>
+      <div class="tbl" id="tbl"></div>
+      <div class="cta" id="cta"><span>Нажми кнопку, чтобы посмотреть, как всё работает</span><button class="primary" id="cta-btn" type="button">Смотреть анимацию</button></div>
+      <div id="scenes"></div>
+    </div>
+    <aside class="ctl" id="ctl" aria-label="Управление анимацией">
+      <nav class="jump" id="jump" aria-label="Разделы"></nav>
+      <button class="primary" id="play" type="button">Пуск</button>
+      <button id="restart" type="button">Сначала</button>
+      <button id="follow" type="button" aria-pressed="true">Следить за шагом: да</button>
+      <button id="speed" type="button" aria-label="Скорость анимации">Скорость: ×2</button>
+      <button id="theme" type="button">Тема: авто</button>
+    </aside>
+  </div>
+</div>
+<button class="back" id="back" type="button"><i></i><span>К текущему шагу</span></button>
+<script>
+var DATA={"title": "Как агенты делают дизайн: все стадии", "description": "Реальный ход последнего цикла дизайна: рефы, база, библиотека, эталоны, перенос, ревью, сторы, пакет и четыре остановки, где решает владелец.", "about": "<b>Дизайн в студии агентов<\/b> идёт от малого к большому: сначала рефы, потом три экрана, потом библиотека и эталоны, и только потом все экраны. Здесь показан настоящий цикл дизайна одного мобильного приложения: два прохода за одни сутки, все передачи между ролями, все остановки и все решения владельца.", "lead": "Время идёт сверху вниз, оно московское. Плашка задачи красится в цвет того, кто её держит. На гейте работа ждёт владельца.", "gateWho": "Владелец отвечает в задаче дизайна", "summary": [["124", "задачи за два прохода"], ["122", "экрана, 478 кадров"], ["4", "решения владельца на остановках"], ["4 ч 56 мин", "три остановки без решения владельца"], ["63", "прогона в финальном проходе"], ["≈ 11–21 USD", "финальный проход по ценам API, оценка снизу"]], "scenes": [{"k": "d1", "n": "СТАДИЯ 1", "code": "11:01–12:11", "short": "Доска рефов и выбор семейств", "title": "Рефы", "rail": "Рефы", "sub": "Агенты ищут рефы и собирают доску. Семейства выбирает владелец.", "meta": ["17.11 11:01 → 12:11", "время московское"], "rows": [["11:01", [["lead", "pd", "сверка каркасов"], ["lead", "vd", "лист версий"]], "Старт прохода", "Product designer сверяет каркасы трёх экранов с PRD. Visual designer собирает лист всех прошлых версий."], ["11:15", [["owner", "lead", "пауза на минуту"]], "Владелец обновляет набор", "В набор добавлены источники рефов. Через минуту работа продолжается."], ["11:16", [["lead", "vd", "рефы и семейства"]], "Поиск рефов", "Порядок источников: рефы живого дизайнера, Mobbin, Awwwards. Awwwards даёт только настроение."], ["11:44", [["owner", "lead", "новый гейт рефов"]], "Флоу меняется на ходу", "Владелец вводит гейт рефов. Раньше агенты выбирали рефы сами, и проходы уходили не туда."], ["11:44", [["vd", "drepo", "доска рефов"]], "Доска всех рефов", "На доске каждый найденный реф: миниатюра, источник, семейство. Доска закрыта в 12:02."], ["12:02", [["lead", "owner", "запрос G2r"]], "Лидер останавливается", "Он показывает доску и кандидатов. Дальше без ответа владельца работа не идёт."]], "gate": {"k": "g2r", "name": "Гейт G2r", "code": "12:11", "short": "Владелец выбирает семейства", "head": "гейт рефов", "pack": [["4 семейства", "«Дыхание», «Тёмная олива», «Ясный день», «Тёплый дом»"], ["доска", "все найденные рефы и кандидаты"], ["9 минут", "от запроса до ответа"]], "text": "approve G2r refs: «Дыхание», «Тёмная олива», «Ясный день».", "after": ["«Тёплый дом» снят и остаётся в листе версий", "Варианты A и B остаются как есть", "Лидер заказывает вариант D «Ясный день»"]}}, {"k": "d2", "n": "СТАДИЯ 2", "code": "11:01–12:46", "short": "Три экрана в вариантах, потом микс", "title": "База", "rail": "База", "sub": "Три ключевых экрана в нескольких вариантах. Владелец выбирает вариант или собирает микс по элементам.", "meta": ["17.11 → 12:46", "3 экрана × 4 варианта", "iOS и Android, две темы"], "rows": [["11:01", [["lead", "vd", "база: 3 экрана"]], "Варианты A, B, C", "Главный, пауза, отчёт недели. Эта задача стартовала до появления гейта рефов и закрыта в 11:48."], ["12:12", [["lead", "vd", "вариант D"]], "Новый вариант после гейта", "Visual designer рисует «Ясный день» и снимает вариант C. Закрыто в 12:25."], ["12:25", [["lead", "owner", "запрос G2a"]], "База v1 на гейте", "Владелец видит четыре варианта рядом: iOS и Android, светлая и тёмная тема."], ["12:31", [["owner", "lead", "нужен микс"]], "Владелец не утверждает базу v1", "Он заказывает микс по элементам: цвета из A и B, виджеты и иконки из D, блок «Сегодня» из B."], ["12:32", [["lead", "vd", "база v2 — микс"]], "Сборка микса", "Один исполнитель собирает микс по списку владельца. Закрыто в 12:41."], ["12:41", [["lead", "owner", "запрос G2a"]], "База v2 на гейте", "Микс получает номер 14 в листе версий."]], "gate": {"k": "g2a", "name": "Гейт G2a", "code": "12:46", "short": "Владелец утверждает базу", "head": "гейт базы", "pack": [["3 экрана", "главный, пауза, отчёт недели"], ["микс", "из вариантов A, B и D"], ["5 минут", "от запроса до ответа"]], "text": "approve G2a base v2 — микс (versions.md № 14).", "after": ["Лидер ставит тег базы v2", "Правка владельца: шрифт в «печенье» на Android меньше", "Ревью микса и библиотека стартуют сразу"]}}, {"k": "d3", "n": "СТАДИЯ 3", "code": "12:46–14:19", "short": "Компоненты и один эталон на группу", "title": "Библиотека и эталоны", "rail": "Библиотека", "sub": "База превращается в библиотеку компонентов. Потом один эталонный экран на каждую группу.", "meta": ["17.11 12:46 → 14:19", "12 групп экранов"], "rows": [["12:46", [["lead", "dr", "ревью микса"], ["lead", "ux", "ревью микса"]], "Два независимых ревью", "Design-reviewer и UX-reviewer смотрят базу отдельно. Их блокеры и major правятся в библиотеке."], ["12:47", [["lead", "vd", "библиотека по базе"]], "Библиотека компонентов", "Токены и компоненты по базе v2. Экраны дальше собираются только из неё."], ["13:05", [["owner", "lead", "продолжай"]], "Пробуждение потерялось", "Ревью сданы, но лидер не проснулся. Владелец будит его комментарием.", "nudge", "Задачи сданы. Продолжай.", "Сигнал не пришёл. Иду дальше."], ["13:16", [["owner", "lead", "продолжай"]], "Пробуждение потерялось снова", "Библиотека сдана в 13:13. Лидер опять молчит.", "nudge", "Библиотека готова. Запускай ревью.", "Запускаю ревью библиотеки."], ["13:16", [["lead", "dr", "ревью библиотеки"]], "Ревью библиотеки", "Закрыто в 13:21."], ["13:37", [["owner", "pd", "эталоны групп"]], "Эталоны: один экран на группу", "120 экранов разбиты на 12 групп. Эталон задаёт вид группы до переноса. Эту задачу владелец запустил сам."], ["13:47", [["lead", "owner", "лист эталонов"]], "Стоп до ответа владельца", "Ошибка в эталоне стоит один экран. Ошибка после переноса стоит всю группу."]], "gate": {"k": "ge", "name": "Эталоны", "code": "14:19", "short": "Владелец принимает эталоны", "head": "остановка на эталонах", "pack": [["12 эталонов", "по одному на группу экранов"], ["лист", "все эталоны рядом"], ["32 минуты", "от листа до ответа"]], "text": "Эталоны приняты. Решения: 1 — да (12 групп, G11 не дробить), 2 — да, 3 — по умолчанию.", "after": ["Лидер запускает перенос всех экранов", "Режим: без владельца до запроса G2", "Подзадачи идут этапами: лидер просыпается, когда этап закрыт"]}}, {"k": "d4", "n": "СТАДИЯ 4", "code": "14:20–19:04", "short": "120 экранов, два круга правок, сторы", "title": "Перенос, ревью, правки", "rail": "Перенос", "sub": "Первый полный проход. Он дошёл до запроса финального гейта, но владелец его не утвердил.", "meta": ["17.11 14:20 → 19:04", "69 задач с начала дня", "1 остановка"], "rows": [["14:20", [["lead", "vd", "дополнения библиотеки"]], "Сначала недостающие компоненты", "Переключатель, строка выбора, степпер, кнопка внизу. Потом ревью дополнений. Закрыто в 14:40."], ["14:20", [["lead", "pd", "12 групп, 120 экранов"]], "Перенос на все экраны", "Двенадцать задач, по одной на группу. Последняя закрыта в 15:36."], ["15:36", [["lead", "dr", "ревью экранов"], ["lead", "ux", "ревью экранов"]], "Ревью всех экранов", "Оба ревью закрыты к 15:49."], ["15:49", [["lead", "vd", "правки библиотеки"], ["lead", "pd", "правки 12 групп"]], "Круг правок 1", "Тринадцать задач: библиотека и каждая группа. Последняя закрыта в 16:43."], ["16:43", [["lead", "lead", "ждёт сигнала"]], "Остановка: 1 ч 7 мин", "Одна старая задача правок осталась в статусе «на ревью». Платформа будит лидера, только когда весь этап закрыт. Владелец заметил это в 17:50.", "stop"], ["17:51", [["lead", "dr", "повторное ревью"], ["lead", "ux", "повторное ревью"]], "Повторное ревью", "Закрыто в 17:58."], ["17:51", [["lead", "vd", "эксперимент: вторая база"]], "Параллельно: эксперимент", "Владелец просит вторую базу по рефам системного приложения здоровья iOS: варианты A и B, ревью, правки. Закрыто в 18:46."], ["17:58", [["lead", "pd", "правки экранов"], ["lead", "vd", "диалог удаления"], ["lead", "copy", "ключи текстов"]], "Круг правок 2", "Правки в четырёх группах и в библиотеке. Проверка круга закрыта в 18:12."], ["18:36", [["vd", "drepo", "скриншоты сторов"]], "Скриншоты для сторов", "Задача ждала своего этапа с 14:20 и закрыта в 18:36."]], "end": "19:04. Владелец отвечает: «approve G2 design v1 — НЕ утверждаю как финал. Эта версия — основа финала». Он заказывает финал: микс базы v2 и эксперимента по элементам."}, {"k": "d5", "n": "СТАДИЯ 5", "code": "19:04–23:44", "short": "Микс по элементам и две остановки", "title": "Финальная база", "rail": "База v3", "sub": "Второй проход начинается снова с базы. Правило то же: сначала три экрана, потом всё остальное.", "meta": ["17.11 19:04 → 23:44", "2 остановки: 3 ч 49 мин"], "rows": [["19:04", [["owner", "lead", "заказ финала"]], "Микс по элементам", "«Печенье» остаётся как в базе v2 и становится защищённым знаком бренда. Виджеты и слайдер дней берутся из эксперимента."], ["19:09", [["lead", "vd", "база v3, 3 экрана"]], "Этапы 1–2: база v3", "Сначала порядок и лист версий, потом три экрана. Закрыто в 19:21."], ["19:21", [["lead", "dr", "ревью базы"], ["lead", "ux", "ревью базы"]], "Этап 3: ревью", "Найдены блокер и пять major."], ["19:27", [["lead", "vd", "правки базы"]], "Этап 4: правки", "Правки начаты и сразу остановлены."], ["19:33", [["vd", "vd", "лимит подписки"]], "Остановка: 2 ч 53 мин", "Пятичасовой лимит подписки исчерпан. Лидер восемь раз проснулся по будильнику и получил тот же отказ. Лимит сброшен в 22:20.", "stop"], ["22:26", [["owner", "lead", "правки к базе v3"]], "Владелец возвращается с правками", "Он возвращает «двойное печенье» на паузу и на главный. Правки идут в текущий этап, до переноса."], ["22:34", [["vd", "drepo", "база v3 с правками"]], "Правки закрыты", "Исправлены блокер и пять major."], ["22:35", [["lead", "dr", "повторное ревью"], ["lead", "ux", "повторное ревью"], ["lead", "copy", "подписи слайдера"]], "Этап 5: повторное ревью", "Три запуска стартуют одновременно."], ["22:35", [["lead", "lead", "ошибка аккаунта"]], "Остановка: 56 мин", "Три запуска упали с ошибкой аккаунта у поставщика модели. Владелец решил вопрос с аккаунтом и в 23:31 попросил перезапуск.", "stop"], ["23:32", [["lead", "dr", "перезапуск"], ["lead", "ux", "перезапуск"]], "Ревью проходит", "Оценки: 4 из 5 и 4,5 из 5. Закрыто в 23:43."]], "end": "23:44. Лидер ставит тег базы v3. Отдельного гейта не было: владелец утвердил базу своими правками в 22:26."}, {"k": "d6", "n": "СТАДИЯ 6", "code": "23:44–03:29", "short": "Библиотека v6, эталоны, перенос партиями", "title": "Библиотека, эталоны, перенос", "rail": "Перенос 2", "sub": "Тот же порядок, что днём: библиотека, эталоны, перенос. Теперь перенос идёт тремя партиями.", "meta": ["17.11 23:44 → 18.11 03:29", "120 экранов", "пауза владельца 1 ч 27 мин"], "rows": [["23:44", [["lead", "vd", "библиотека v6"]], "Этап 7: библиотека по базе v3", "121 компонент. У компонентов с системной оболочкой два варианта: iOS и Android."], ["00:07", [["lead", "dr", "ревью библиотеки"], ["lead", "copy", "ключ вкладки"]], "Этап 8: ревью", "Оценка 3,5 из 5 и один блокер: сдвиг второго слоя «печенья» вдвое меньше, чем в утверждённой базе."], ["00:18", [["owner", "lead", "этап готов"]], "Владелец будит лидера", "Ревью сдано, лидер молчит.", "nudge", "Этап 8 готов. Создай этап правок.", "Принял. Запускаю правки."], ["00:18", [["lead", "vd", "правки библиотеки"]], "Этапы 9–11: правки и повторное ревью", "Версии 6.1 и 6.2. Повторное ревью: pass, 4 из 5."], ["00:39", [["owner", "lead", "два решения"]], "Решения владельца по ходу", "Вариант «Вечерний сад» в финал не идёт. В блоке «Сегодня» вместо дуги возвращаются два вложенных кольца."], ["00:40", [["lead", "vd", "два кольца"]], "Этапы 12–14: виджет «Сегодня»", "Виджет, два ревью, правки. Закрыто в 01:07."], ["01:12", [["lead", "pd", "эталоны 12 групп"], ["lead", "copy", "ключи доступности"]], "Этап 15: эталоны", "Закрыто в 01:27. Остановки на эталонах здесь нет: владелец разрешил идти без него до запроса G2."], ["01:27", [["lead", "pd", "4 группы, 43 экрана"]], "Этап 16: перенос, партия 1", "Главный, пауза, вопросы, решения. Закрыто в 01:42."], ["01:42", [["lead", "pd", "4 группы, 28 экранов"]], "Этап 17: партия 2", "Быстрая запись, история, отчёты, уведомления. Закрыто в 01:57."], ["01:57", [["lead", "pd", "4 группы, 49 экранов"]], "Этап 18: партия 3", "Онбординг, вход, настройки, моменты программы."], ["02:02", [["owner", "lead", "пауза"]], "Пауза по команде владельца: 1 ч 27 мин", "Владелец ставит работу на паузу. Лидер записывает точку возобновления. В 03:29 владелец пишет: лимит сброшен, продолжай."]], "end": "03:29. Партия 3 закрыта. Все 120 экранов собраны из библиотеки."}, {"k": "d7", "n": "СТАДИЯ 7", "code": "03:29–06:01", "short": "Ревью, два круга правок, сторы, пакет", "title": "Ревью, сторы, пакет", "rail": "Финал", "sub": "Ревью всех экранов, не больше двух кругов правок, материалы для сторов и пакет для гейта.", "meta": ["18.11 03:29 → 06:01", "ответ владельца 19.11 03:26"], "rows": [["03:29", [["lead", "dr", "ревью 120 экранов"], ["lead", "ux", "ревью 120 экранов"]], "Этап 19: ревью всех экранов", "Четыре задачи: два ревьюера, две половины групп. Закрыто в 03:45. Вердикт: нужны правки."], ["03:45", [["lead", "vd", "библиотека v6.5"]], "Этап 20: правки, шаг 1", "Сначала библиотека и эталоны трёх групп. Закрыто в 04:09."], ["04:15", [["lead", "pd", "правки экранов"]], "Этап 21: правки, шаг 2", "Пять задач по группам. Последняя закрыта в 04:45."], ["04:45", [["lead", "dr", "повторное ревью"], ["lead", "ux", "повторное ревью"]], "Этап 22: повторное ревью", "Одна группа не проходит: отчёты, оценки 3,5 и 3,0."], ["05:01", [["lead", "pd", "отчёты: «Назад»"], ["lead", "copy", "ключи"], ["lead", "vd", "сторы, значок, баннер"]], "Этап 23: круг 2 и сторы", "Правка вложенных экранов отчётов. Параллельно скриншоты сторов в новой палитре."], ["05:15", [["lead", "pd", "два новых состояния"]], "Этап 24: недостающие состояния", "«Файл готов» и «Удалили. Отменить». Итог: 122 экрана."], ["05:30", [["lead", "dr", "проверка"], ["lead", "ux", "проверка"]], "Этап 25: проверка", "Оба ревью: pass. Блокеров и major нет. Третьего круга нет: правило — не больше двух."], ["05:45", [["lead", "vd", "пакеты"]], "Этап 26: пакет для гейта и для дизайнера", "Лист «было → стало», 13 листов и 24 кадра для живого дизайнера, список решений, принятых по рекомендации."], ["06:01", [["lead", "owner", "запрос G2"]], "Лидер останавливается", "Владелец отвечает через 21 ч 25 мин: 19.11 в 03:26."]], "gate": {"k": "g2", "name": "Гейт G2", "code": "19.11 03:26", "short": "Владелец утверждает дизайн", "head": "финальный гейт дизайна", "pack": [["122 экрана", "478 кадров: iOS и Android, две темы"], ["2 круга правок", "оба ревью: pass"], ["сторы", "по 7 кадров, значок, баннер"]], "text": "approve G2 design v4", "after": ["Лидер записывает шесть решений владельца и ставит тег", "Этап 27: исполнитель оставил задачу «на ревью», лидер ждал будильник, владелец разбудил его в 03:32", "Две задачи уходят в бэклог. Разработка ждёт команды владельца"]}}]};
+(function(){
+  var ALIAS={};
+  var ROLE={
+   owner:['Владелец','<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/>'],
+   lead:['Лидер','<path d="M6 21V4"/><path d="M6 5h11l-2.5 3.5L17 12H6"/>'],
+   res:['Исследователь','<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>'],
+   idea:['Партнёр по идее','<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V15h7v-1.1A6 6 0 0 0 12 3z"/>'],
+   po:['Product owner','<path d="M7 3h7l4 4v14H7z"/><path d="M10 12h6M10 16h6"/>'],
+   arch:['Архитектор','<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'],
+   pa:['Аналитик данных','<path d="M5 20V10M12 20V4M19 20v-7"/>'],
+   mk:['Маркетолог','<path d="M4 10v4h3l7 4V6l-7 4z"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5"/>'],
+   copy:['Копирайтер','<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>'],
+   pd:['Product designer','<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 9v11"/>'],
+   vd:['Visual designer','<path d="M12 3c3 4 6 6.8 6 10.5a6 6 0 0 1-12 0C6 9.8 9 7 12 3z"/>'],
+   dr:['Ревьюер дизайна','<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'],
+   ux:['UX-ревьюер','<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 17c5-1 3-9 8-10"/>'],
+   repo:['home repo','<circle cx="7" cy="6" r="2.2"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="9" r="2.2"/><path d="M7 8.2v7.6M17 11.2c0 3-4 3.3-10 4.6"/>'],
+   drepo:['design repo','<circle cx="7" cy="6" r="2.2"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="9" r="2.2"/><path d="M7 8.2v7.6M17 11.2c0 3-4 3.3-10 4.6"/>']
+  };
+  var ICON={code:'<path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>',phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',check:'<path d="M4 12l5 5L20 6"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',shield:'<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>',book:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',graph:'<circle cx="6" cy="6" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="10" cy="18" r="2"/><path d="M8 6.5l8 1M7 8l2.5 8M16.8 9.7l-5.5 6.8"/>',scale:'<path d="M12 4v16M6 8h12M6 8l-3 6h6zM18 8l-3 6h6z"/>',star:'<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/>',server:'<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/><path d="M8 7.5h.01M8 16.5h.01"/>',laptop:'<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>',terminal:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/>',chat:'<path d="M4 5h16v11H9l-5 4z"/>',grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',gem:'<path d="M12 3l7 5v8l-7 5-7-5V8z"/>'};
+  var css='';
+  Object.keys(DATA.roles||{}).forEach(function(k){var r=DATA.roles[k],base=ROLE[r.like||'lead'];ROLE[k]=[r.name,r.icon?(ICON[r.icon]||r.icon):base[1]];
+    if(r.color){css+=':root{--r-'+k+':'+r.color+'}';var d=r.colorDark||r.color;css+='@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--r-'+k+':'+d+'}}:root[data-theme="dark"]{--r-'+k+':'+d+'}';}
+    else ALIAS[k]=r.like||'lead';});
+  if(css){var stEl=document.createElement('style');stEl.textContent=css;document.head.appendChild(stEl);}
+  function col(k){k=ALIAS[k]||k;return 'var(--r-'+(k==='drepo'?'repo':k)+')';}
+  function isRepo(k){return k==='repo'||k==='drepo';}
+  function av(k){return '<span class="av" style="--c:'+col(k)+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+ROLE[k][1]+'</svg></span>';}
+  var SC=DATA.scenes;
+  SC.forEach(function(s){s.rows.forEach(function(r){r[1].forEach(function(m){if(m.length<3)m.push('');if(!ROLE[m[0]]||!ROLE[m[1]])throw new Error('Unknown role in scene '+s.k+': '+m[0]+' / '+m[1]);});});});
+  document.getElementById('h-title').textContent=DATA.title;document.getElementById('h-about').innerHTML=DATA.about||'';document.getElementById('h-lead').textContent=DATA.lead||'';
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var speed=2,playing=false,gen=0,started=false,follow=true,rail={},ORDER=[];
+  var railEl=document.getElementById('rail'),scenesEl=document.getElementById('scenes');
+  var bPlay=document.getElementById('play'),bFollow=document.getElementById('follow');
+  function label(){bPlay.textContent=playing?'Пауза':'Пуск';}
+  var animK=SC[0].k;
+  function animSet(k){animK=k;if(follow)railSet(k);}
+  function spy(){if(follow)return;var line=window.innerHeight*0.35,cur=SC[0].k;SC.forEach(function(s){if(!s.el)return;if(s.el.getBoundingClientRect().top<=line){cur=s.k;if(s.G&&s.G.card.getBoundingClientRect().top<=line)cur=s.gate.k;}});if(FIN&&FIN.el&&FIN.el.getBoundingClientRect().top<=line)cur=FIN.k;railSet(cur);}
+  var spyT=0;window.addEventListener('scroll',function(){if(follow||spyT)return;spyT=setTimeout(function(){spyT=0;spy();},90);},{passive:true});
+  var curEl=null,bBack=document.getElementById('back');
+  var ctl=document.getElementById('ctl'),burger=document.getElementById('burger'),wrapR=document.getElementById('railwrap'),mq=window.matchMedia('(max-width:1100px)');
+  var layoutEl=document.querySelector('.layout');
+  function place(){if(mq.matches){document.body.appendChild(bBack);wrapR.appendChild(ctl);}else{layoutEl.appendChild(ctl);ctl.appendChild(bBack);ctl.classList.remove('open');burger.setAttribute('aria-expanded','false');}}
+  if(mq.addEventListener)mq.addEventListener('change',place);else if(mq.addListener)mq.addListener(place);place();
+  function menu(v){ctl.classList.toggle('open',v);burger.setAttribute('aria-expanded',v?'true':'false');}
+  burger.addEventListener('click',function(e){e.stopPropagation();menu(!ctl.classList.contains('open'));});
+  document.addEventListener('click',function(e){if(mq.matches&&ctl.classList.contains('open')&&!ctl.contains(e.target))menu(false);});
+  function backVis(){bBack.classList.toggle('show',!follow&&started&&!!curEl);}
+  bBack.addEventListener('click',function(){setFollow(true);if(curEl)go(curEl,'center',true);});
+  function setFollow(v){follow=v;setTimeout(backVis,0);if(v)railSet(animK);else setTimeout(spy,0);bFollow.textContent='Следить за шагом: '+(v?'да':'нет');bFollow.setAttribute('aria-pressed',v?'true':'false');}
+  function see(el,blk){if(reduce||!follow)return;go(el,blk,true);}
+  function go(el,blk,smooth){var r=el.getBoundingClientRect(),vh=window.innerHeight,se=document.scrollingElement||document.documentElement;
+    var wr=document.getElementById('railwrap'),off=(window.matchMedia('(max-width:1100px)').matches)?document.getElementById('rail').offsetHeight+24:12;
+    if(window.visualViewport&&window.visualViewport.height)vh=Math.min(vh,window.visualViewport.height);
+    var top=(blk==='start')?r.top+se.scrollTop-off:r.top+se.scrollTop-Math.max(off,Math.min((vh-r.height)/2,vh*0.32));
+    top=Math.max(0,top);
+    try{window.scrollTo({top:top,behavior:smooth?'smooth':'auto'});}catch(e){window.scrollTo(0,top);}
+    try{if(Math.abs(se.scrollTop-top)>4&&se.scrollHeight<=se.clientHeight+4)el.scrollIntoView({behavior:smooth?'smooth':'auto',block:blk==='start'?'start':'center'});}catch(e){}}
+  function setBub(m,k){m.bub.style.setProperty('--c',col(k));m.avEl.innerHTML=av(k);m.nm.textContent=ROLE[k][0];}
+  function railItem(k,name,code,short,gate,si,atGate){
+    ORDER.push(k);
+    var li=document.createElement('li');li.setAttribute('data-k',k);if(gate)li.className='gate';
+    var b=document.createElement('button');b.type='button';b.innerHTML=name+'<small>'+code+'</small><em>'+short+'</em>';li.appendChild(b);railEl.appendChild(li);rail[k]=li;
+    b.addEventListener('click',function(e){e.preventDefault();jump(si,atGate);});
+  }
+  SC.forEach(function(s,si){
+    railItem(s.k,s.rail||s.title,s.code,s.short,false,si,false);
+    var sec=document.createElement('section');sec.className='scene';sec.id='st-'+s.k;
+    var used=[];s.rows.forEach(function(r){r[1].forEach(function(m){[m[0],m[1]].forEach(function(k){if(used.indexOf(k)<0)used.push(k);});});});
+    var h='<div class="inner"><div class="shead" tabindex="0" role="button" aria-label="Запустить анимацию с этого этапа"><span class="k">'+s.n+'</span><h2></h2><p></p>'+(s.meta?'<div class="meta">'+s.meta.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>':'')+'</div><div class="roles">'+used.map(function(k){return '<span class="role">'+av(k)+ROLE[k][0]+'</span>';}).join('')+'</div><div class="rws"></div>';
+    if(s.gate){var g=s.gate;h+='<div class="gcard"><div><h3>'+g.name+': '+(g.head||'что видит владелец')+'</h3><ul>'+g.pack.map(function(p){return '<li><code>'+p[0]+'</code><span>'+p[1]+'</span></li>';}).join('')+'</ul></div><div><div class="cbox"><p class="who"><i>В</i>'+(DATA.gateWho||'Владелец отвечает в задаче инициативы')+'</p><div class="field"><span class="typed"></span></div><div class="send"><span>Отправить</span></div></div><ul class="after">'+g.after.map(function(a){return '<li>'+a+'</li>';}).join('')+'</ul></div></div>';}
+    else h+='<div class="nogate">'+(s.end||'Гейта здесь нет. Лидер принимает работу и сам запускает следующий этап.')+'</div>';
+    sec.innerHTML=h+'</div>';sec.querySelector('h2').textContent=s.title;sec.querySelector('.shead p').textContent=s.sub;
+    var rws=sec.querySelector('.rws');s.R=[];
+    s.rows.forEach(function(r){
+      var row=document.createElement('div');var base='grid row'+(r[4]==='stop'?' stop':r[4]==='nudge'?' nudge':'');row.className=base;
+      var tag=document.createElement('div');tag.className='tag';tag.textContent=r[0];
+      var area=document.createElement('div');area.className='area';var mvs=[];
+      r[1].forEach(function(m){
+        var hop=document.createElement('div');hop.className='hop';var self=m[0]===m[1];
+        var from=document.createElement('span');from.className='from';from.innerHTML=av(m[0])+ROLE[m[0]][0];
+        var arr=document.createElement('span');arr.className='arr';arr.innerHTML='<i></i>';
+        var bub=document.createElement('span');bub.className='bub'+(isRepo(m[1])?' file':'');
+        bub.innerHTML='<span class="avw"></span><span class="tx"><small></small><b></b></span><span class="st"></span>';bub.querySelector('b').textContent=m[2];
+        if(!self){hop.appendChild(from);hop.appendChild(arr);}hop.appendChild(bub);area.appendChild(hop);
+        var o={a:m[0],b:m[1],self:self,bub:bub,from:from,line:arr.firstChild,avEl:bub.querySelector('.avw'),nm:bub.querySelector('small'),done:isRepo(m[1])};setBub(o,o.b);mvs.push(o);
+      });
+      var fig=null;if(r[5]&&typeof r[5]==='object'&&r[5].img){fig=document.createElement('figure');fig.className='fig'+(r[5].narrow?' narrow':'');var fim=document.createElement('img');fim.src=r[5].img;fim.alt=r[5].cap||'';fim.loading='lazy';fig.appendChild(fim);if(r[5].cap){var fc=document.createElement('figcaption');fc.textContent=r[5].cap;fig.appendChild(fc);}area.appendChild(fig);}
+      var term=null;if(r[5]&&typeof r[5]==='object'&&!r[5].img){var tw=document.createElement('div');tw.className='term';tw.innerHTML='<div class="th"><i></i><i></i><i></i><span></span></div><pre></pre>';tw.querySelector('.th span').textContent=r[5].where||'терминал';area.appendChild(tw);term={pre:tw.querySelector('pre'),cmd:r[5].cmd||[],out:r[5].out||''};}
+      var note=document.createElement('div');note.className='note';note.innerHTML='<b></b><span></span>';note.firstChild.textContent=r[2];note.lastChild.textContent=r[3];
+      row.appendChild(tag);row.appendChild(area);row.appendChild(note);rws.appendChild(row);s.R.push({el:row,mvs:mvs,base:base,say:typeof r[5]==='string'?r[5]:null,sorry:r[6],term:term,fig:fig});
+    });
+    s.el=sec;
+    (function(si){var hd=sec.querySelector('.shead');function st(){jump(si,false);}hd.addEventListener('click',st);hd.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();st();}});var g3=sec.querySelector('.gcard h3');if(g3)g3.addEventListener('click',function(){jump(si,true);});})(si);
+    if(s.gate){s.G={card:sec.querySelector('.gcard'),typed:sec.querySelector('.typed'),field:sec.querySelector('.field'),send:sec.querySelector('.send span'),after:[].slice.call(sec.querySelectorAll('.after li'))};railItem(s.gate.k,s.gate.name,s.gate.code,s.gate.short,true,si,true);}
+    scenesEl.appendChild(sec);
+  });
+  var FIN=DATA.finale||null,F=null;
+  if(FIN){(function(){
+    [FIN.coach].concat(FIN.leaders.map(function(x){return x[0];}),FIN.team.map(function(x){return x[0];})).forEach(function(k){if(!ROLE[k])throw new Error('Unknown role in finale: '+k);});
+    var si=SC.length;railItem(FIN.k,FIN.rail||FIN.title,FIN.code,FIN.short,false,si,false);
+    var sec=document.createElement('section');sec.className='scene';sec.id='st-'+FIN.k;
+    function who(k,cls){return '<div class="pc '+cls+'" style="--c:'+col(k)+'"><div class="pw">'+av(k)+'<span class="sn">'+esc(ROLE[k][0])+'</span></div><span class="pb" aria-hidden="true"></span></div>';}
+    sec.innerHTML='<div class="inner"><div class="shead" tabindex="0" role="button" aria-label="Запустить анимацию с этого этапа"><span class="k"></span><h2></h2><p></p></div><div class="plac"><div class="ptop">'+who(FIN.coach,'coach')+'<div class="pleads">'+FIN.leaders.map(function(x){return who(x[0],'ld');}).join('')+'</div></div><div class="ranks">'+FIN.team.map(function(x){return '<div class="sold" style="--c:'+col(x[0])+'"><div class="sbw"><span class="sb" aria-hidden="true"></span></div>'+av(x[0])+'<span class="sn">'+esc(ROLE[x[0]][0])+'</span></div>';}).join('')+'</div></div><div class="nogate"></div></div>';
+    sec.querySelector('.k').textContent=FIN.n;sec.querySelector('h2').textContent=FIN.title;sec.querySelector('.shead p').textContent=FIN.sub;sec.querySelector('.nogate').textContent=FIN.end||'';
+    var hd=sec.querySelector('.shead');function st(){jump(si,false);}hd.addEventListener('click',st);hd.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();st();}});
+    scenesEl.appendChild(sec);FIN.el=sec;
+    var pcs=[].slice.call(sec.querySelectorAll('.pc'));
+    F={coach:pcs[0],coachB:pcs[0].querySelector('.pb'),L:pcs.slice(1).map(function(e,i){return {el:e,b:e.querySelector('.pb'),say:FIN.leaders[i][1]};}),
+       S:[].slice.call(sec.querySelectorAll('.sold')).map(function(e,i){return {el:e,b:e.querySelector('.sb'),av:e.querySelector('.av'),slogan:FIN.team[i][1],thanks:FIN.team[i][2]};})};
+  })();}
+  function sayB(el,t){el.textContent=t;el.classList.add('show');anim(el,[{transform:'scale(.5)'},{transform:'scale(1.12)',offset:.6},{transform:'scale(1)'}],{duration:320,easing:'ease-out'});}
+  function finRest(){if(!F)return;F.coach.classList.add('in');F.coachB.textContent=FIN.call;F.coachB.classList.add('show');F.S.forEach(function(s){s.el.classList.add('in');s.b.textContent=s.slogan;s.b.classList.add('show');});F.L.forEach(function(l){l.el.classList.add('in');l.b.textContent=l.say;l.b.classList.add('show');});}
+  function finArm(){if(!F)return;F.coach.classList.remove('in');F.coachB.classList.remove('show');F.S.forEach(function(s){s.el.classList.remove('in');s.b.classList.remove('show');});F.L.forEach(function(l){l.el.classList.remove('in');l.b.classList.remove('show');});}
+  function each(list,step,my,fn){list.forEach(function(x,i){setTimeout(function(){if(my===gen)fn(x,i);},reduce?0:i*step/speed);});}
+  function playFinale(my){
+    var p=Promise.resolve().then(function(){if(my!==gen)return;animSet(FIN.k);curEl=FIN.el;backVis();see(FIN.el,'start');return wait(1100,my);})
+     .then(function(){if(my!==gen)return;F.coach.classList.add('in');return wait(700,my);})
+     .then(function(){if(my!==gen)return;sayB(F.coachB,FIN.build);each(F.S,70,my,function(s){s.el.classList.add('in');});return wait(1400+F.S.length*70,my);})
+     .then(function(){if(my!==gen)return;sayB(F.coachB,FIN.drill);return wait(1700,my);});
+    FIN.count.forEach(function(c){p=p.then(function(){if(my!==gen)return;sayB(F.coachB,c);F.S.forEach(function(s){anim(s.av,[{transform:'none'},{transform:'translateY(6px) scale(1.22,.6)',offset:.45},{transform:'none'}],{duration:640,easing:'ease-in-out'});});return wait(860,my);});});
+    return p.then(function(){if(my!==gen)return;sayB(F.coachB,FIN.call);return wait(1200,my);})
+     .then(function(){if(my!==gen)return;each(F.S,45,my,function(s){sayB(s.b,s.slogan);});return wait(5600,my);})
+     .then(function(){if(my!==gen)return;F.S.forEach(function(s){s.b.classList.remove('show');});sayB(F.coachB,FIN.dismiss);return wait(1500,my);})
+     .then(function(){if(my!==gen)return;each(F.L,260,my,function(l){l.el.classList.add('in');});return wait(1300,my);})
+     .then(function(){if(my!==gen)return;each(F.L,900,my,function(l){sayB(l.b,l.say);});return wait(900*F.L.length+2200,my);})
+     .then(function(){if(my!==gen)return;each(F.S,60,my,function(s){sayB(s.b,s.thanks);anim(s.av,[{transform:'none'},{transform:'translateY(-9px)',offset:.4},{transform:'none'}],{duration:460,easing:'ease-out'});});return wait(6000,my);});
+  }
+  function jump(si,atGate){hideCta();var s=SC[si]||FIN;setFollow(true);gen++;playing=true;started=true;label();railSet(atGate&&s.gate?s.gate.k:s.k);go(atGate&&s.G?s.G.card:s.el,'start',false);run(gen,si,atGate);}
+  function railSet(on){var i=ORDER.indexOf(on);ORDER.forEach(function(k,j){rail[k].classList.toggle('on',j===i);rail[k].classList.toggle('done',j<i);});
+    var li=rail[on];if(li&&railEl.scrollWidth>railEl.clientWidth+4){try{railEl.scrollTo({left:li.offsetLeft-railEl.clientWidth/2+li.offsetWidth/2,behavior:reduce?'auto':'smooth'});}catch(e){railEl.scrollLeft=li.offsetLeft;}}}
+  function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function termLine(l){return l.charAt(0)==='#'?'<span class="cm">'+esc(l)+'</span>':'<span class="pr">$ </span>'+esc(l);}
+  function termFull(r){if(!r.term)return;r.term.pre.innerHTML=r.term.cmd.map(termLine).join('\n')+(r.term.out?'\n<span class="ok">'+esc(r.term.out)+'</span>':'');}
+  function termType(r,my){if(!r.term)return Promise.resolve();var T=r.term,done=[],p=Promise.resolve();
+    T.cmd.forEach(function(l){var n=Math.ceil(l.length/3);for(var k=1;k<=n;k++){(function(k){p=p.then(function(){if(my!==gen)return;T.pre.innerHTML=done.concat([termLine(l.slice(0,k*3))]).join('\n')+'<span class="cur"></span>';return wait(34,my);});})(k);}
+      p=p.then(function(){if(my!==gen)return;done.push(termLine(l));return wait(260,my);});});
+    return p.then(function(){if(my!==gen)return;T.pre.innerHTML=done.join('\n')+(T.out?'\n<span class="ok">'+esc(T.out)+'</span>':'');});}
+  function rowRest(r){termFull(r);if(r.fig)r.fig.classList.remove('hid');r.el.className=r.base;r.mvs.forEach(function(m){m.bub.style.transform='none';if(m.line)m.line.style.transform='';setBub(m,m.b);m.bub.classList.toggle('done',m.done);});}
+  function rowArm(r){if(r.term)r.term.pre.innerHTML='';if(r.fig)r.fig.classList.add('hid');r.el.className=r.base+' idle pre';r.mvs.forEach(function(m){m.bub.style.transform='none';setBub(m,m.a);m.bub.classList.remove('done');if(!m.self&&m.line)m.line.style.transform='scaleX(0)';});}
+  function gateRest(s){if(!s.G)return;s.G.card.classList.remove('idle');s.G.typed.textContent=s.gate.text;s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.add('show');});}
+  function gateArm(s){if(!s.G)return;s.G.card.classList.add('idle');s.G.typed.textContent='';s.G.field.classList.remove('focus');s.G.send.classList.remove('go');s.G.after.forEach(function(a){a.classList.remove('show');});}
+  function restAll(){SC.forEach(function(s){s.R.forEach(rowRest);gateRest(s);});finRest();railSet(SC[0].k);}
+  function wait(ms,my){return new Promise(function(res){var left=reduce?0:ms/speed;(function tick(){if(my!==gen){res();return;}if(!playing){setTimeout(tick,120);return;}if(left<=0){res();return;}left-=60;setTimeout(tick,60);})();});}
+  function anim(el,kf,opt){try{if(el&&el.animate&&!reduce){if(opt.duration)opt.duration=opt.duration/speed;if(opt.delay)opt.delay=opt.delay/speed;return el.animate(kf,opt);}}catch(e){}return null;}
+  function fly(m){
+    var ring=[{boxShadow:'0 0 0 0 color-mix(in srgb,'+col(m.b)+' 60%,transparent)'},{boxShadow:'0 0 0 14px color-mix(in srgb,'+col(m.b)+' 0%,transparent)'}];
+    if(m.self){m.bub.style.transform='none';anim(m.bub,[{transform:'scale(.9)'},{transform:'scale(1.06)',offset:.6},{transform:'scale(1)'}],{duration:520,easing:'ease-out'});anim(m.bub,ring,{duration:700,delay:300});return;}
+    var dx=m.from.offsetLeft-m.bub.offsetLeft,dy=m.from.offsetTop-m.bub.offsetTop+(m.from.offsetHeight-m.bub.offsetHeight)/2,lift=Math.abs(dx)>20?-16:0,side=Math.abs(dx)>20?0:14;
+    m.bub.style.transform='none';
+    anim(m.from,[{transform:'scale(1)'},{transform:'scale(1.14)',offset:.4},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});
+    anim(m.bub,[{transform:'translate('+dx+'px,'+dy+'px) scale(.9) rotate(0deg)'},{transform:'translate('+(dx*.5+side)+'px,'+(dy*.5+lift)+'px) scale(1.07) rotate('+(lift?-3:0)+'deg)',offset:.55},{transform:'translate(0,0) scale(1) rotate(0deg)'}],{duration:950,easing:'cubic-bezier(.34,.72,.24,1)'});
+    if(m.line){m.line.style.transform='';anim(m.line,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:700,easing:'ease-out'});}
+    setTimeout(function(){anim(m.avEl,[{transform:'rotateY(0deg)'},{transform:'rotateY(90deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:360,easing:'ease-in-out'});setTimeout(function(){setBub(m,m.b);},reduce?0:180/speed);},reduce?0:400/speed);
+    anim(m.bub,ring,{duration:700,delay:880,easing:'ease-out'});
+  }
+  var CURSE=['Ну ё@#$!','Где результат, б@#$ь?!','Какого х@#$ стоим?!','П@#$ц, опять тишина!','Работаем, ё@#$ вашу!','Сколько можно, б@#$ь!'],curseI=0;
+  var LEADS=DATA.leads||['lead','pm','kl'];
+  var SAY={ownerTo:['Вот задача','Смотри сюда','Решил так','Делаем так'],toOwner:['Жду решения','Нужен твой ответ','Посмотри, пожалуйста'],toRepo:['Закоммитил','Сдал, done','Готово, в репозитории'],leadTo:['Держи задачу','Твоя очередь','Сделай, пожалуйста','Это тебе'],agentTo:['Готово, принимай','Передаю дальше','Посмотри, пожалуйста'],self:['Проверяю','Сверяю','Думаю']},sayI=0;
+  function softLine(m){var k=m.self?'self':m.a==='owner'?'ownerTo':m.b==='owner'?'toOwner':isRepo(m.b)?'toRepo':LEADS.indexOf(m.a)>=0?'leadTo':'agentTo';var L=SAY[k];return L[sayI++%L.length];}
+  function curse(m,say,soft){var hop=m.bub.parentNode,c=hop.querySelector('.curse');if(!c){c=document.createElement('span');c.setAttribute('aria-hidden','true');hop.appendChild(c);}c.className='curse'+(soft?' soft':'');c.textContent=say||CURSE[curseI++%CURSE.length];
+    if(soft)anim(c,[{opacity:0,transform:'scale(.6) translateY(4px)'},{opacity:1,transform:'scale(1.05)',offset:.14},{opacity:1,transform:'scale(1)',offset:.22},{opacity:1,transform:'scale(1)',offset:.8},{opacity:0,transform:'scale(.95) translateY(-6px)'}],{duration:2000,easing:'ease-out'});
+    else anim(c,[{opacity:0,transform:'scale(.3) rotate(-12deg)'},{opacity:1,transform:'scale(1.25) rotate(4deg)',offset:.12},{opacity:1,transform:'scale(1) rotate(-3deg)',offset:.2},{opacity:1,transform:'scale(1.06) rotate(3deg)',offset:.3},{opacity:1,transform:'scale(1) rotate(-2deg)',offset:.4},{opacity:1,transform:'scale(1) rotate(0)',offset:.9},{opacity:0,transform:'scale(.9) translateY(-8px)'}],{duration:4200,easing:'ease-out'});}
+  var SORRY=['Простите! Лимит кончился','Виноват, ждал ревью','Извини, контекст переполнился','Сорри, перечитывал скиллы','Простите, думал, это не мне','Виноват, закоммитил и забыл про done'],sorryI=0;
+  function reply(m,say){var hop=m.bub.parentNode,c=hop.querySelector('.reply');if(!c){c=document.createElement('span');c.className='reply';c.setAttribute('aria-hidden','true');hop.appendChild(c);}c.textContent=say||SORRY[sorryI++%SORRY.length];c.style.left=(m.bub.offsetLeft+34)+'px';c.style.top=(m.bub.offsetTop+m.bub.offsetHeight+3)+'px';
+    anim(c,[{opacity:0,transform:'scale(.6) translateY(-4px)'},{opacity:1,transform:'scale(1.06)',offset:.12},{opacity:1,transform:'scale(1)',offset:.2},{opacity:1,transform:'scale(1)',offset:.9},{opacity:0,transform:'scale(.95) translateY(4px)'}],{duration:4000,easing:'ease-out'});}
+  function playRow(s,i,my){var r=s.R[i];
+    if(i>0)s.R[i-1].el.className=s.R[i-1].base;
+    r.el.className=r.base+' active pre';curEl=r.el;backVis();see(r.el);
+    return wait(650,my).then(function(){if(my!==gen)return;r.el.classList.remove('pre');if(r.mvs.length&&DATA.bubbles!==false){if(r.base.indexOf('nudge')>=0)curse(r.mvs[0],r.say);else if(r.base.indexOf('stop')<0)curse(r.mvs[0],r.say||softLine(r.mvs[0]),true);}r.mvs.forEach(function(m,k){setTimeout(function(){if(my===gen)fly(m);},reduce?0:k*220/speed);});return wait((r.base.indexOf('nudge')>=0&&DATA.bubbles!==false?2600:1250)+(r.mvs.length-1)*220,my);})
+     .then(function(){if(my!==gen)return;return termType(r,my);})
+     .then(function(){if(my!==gen||!r.fig)return;r.fig.classList.remove('hid');return wait(1400,my);})
+     .then(function(){if(my!==gen)return;if(r.base.indexOf('nudge')>=0&&r.mvs.length&&DATA.bubbles!==false)reply(r.mvs[0],r.sorry);r.mvs.forEach(function(m){setBub(m,m.b);if(m.done)m.bub.classList.add('done');if(r.base.indexOf('nudge')>=0)anim(m.bub,[{transform:'rotate(0)'},{transform:'rotate(-5deg) translateX(-4px)'},{transform:'rotate(5deg) translateX(4px)'},{transform:'rotate(-4deg) translateX(-3px)'},{transform:'rotate(4deg) translateX(3px)'},{transform:'rotate(0)'}],{duration:560,easing:'ease-in-out'});});return wait(r.base.indexOf('nudge')>=0&&DATA.bubbles!==false?4300:2700,my);});
+  }
+  function playGate(s,my){var G=s.G,T=s.gate.text;
+    var p=Promise.resolve().then(function(){if(my!==gen)return;G.card.classList.remove('idle');animSet(s.gate.k);curEl=G.card;backVis();see(G.card);G.field.classList.add('focus');G.typed.innerHTML='<span class="caret"></span>';return wait(900,my);});
+    T.split('').forEach(function(ch,i){p=p.then(function(){if(my!==gen)return;G.typed.innerHTML=T.slice(0,i+1).replace(/</g,'&lt;')+'<span class="caret"></span>';return wait(85,my);});});
+    return p.then(function(){if(my!==gen)return;G.send.classList.add('go');return wait(900,my);})
+     .then(function(){if(my!==gen)return;G.typed.textContent=T;G.field.classList.remove('focus');G.send.classList.remove('go');G.after[0].classList.add('show');return wait(1100,my);})
+     .then(function(){if(my!==gen)return;G.after[1].classList.add('show');return wait(1100,my);})
+     .then(function(){if(my!==gen)return;G.after[2].classList.add('show');return wait(2200,my);});
+  }
+  function run(my,from,atGate){
+    from=from||0;
+    SC.forEach(function(s,si){if(si<from||(si===from&&atGate)){s.R.forEach(rowRest);if(si<from)gateRest(s);else gateArm(s);}else{s.R.forEach(rowArm);gateArm(s);}});
+    finArm();
+    var p=Promise.resolve();
+    SC.forEach(function(s,si){if(si<from)return;
+      var skipRows=(si===from&&atGate);
+      p=p.then(function(){if(my!==gen)return;animSet(s.k);if(!skipRows){see(s.el,'start');return wait(1100,my);}});
+      if(!skipRows)s.R.forEach(function(r,i){p=p.then(function(){if(my!==gen)return;return playRow(s,i,my);});});
+      p=p.then(function(){if(my!==gen)return;s.R[s.R.length-1].el.className=s.R[s.R.length-1].base;});
+      if(s.G)p=p.then(function(){if(my!==gen)return;return playGate(s,my);});
+      else p=p.then(function(){if(my!==gen)return;return wait(1200,my);});
+    });
+    if(FIN)p=p.then(function(){if(my!==gen)return;return playFinale(my);});
+    return p.then(function(){if(my!==gen)return;return wait(6000,my);}).then(function(){if(my!==gen)return;run(my,0,false);});
+  }
+  bFollow.addEventListener('click',function(){setFollow(!follow);});
+  var bSpeed=document.getElementById('speed'),SP=[1,2,4],spi=1;
+  bSpeed.addEventListener('click',function(){spi=(spi+1)%SP.length;speed=SP[spi];bSpeed.textContent='Скорость: ×'+speed;});
+  var bTheme=document.getElementById('theme'),root=document.documentElement,hostTheme=root.getAttribute('data-theme'),TH=['auto','light','dark'],TN={auto:'авто',light:'светлая',dark:'тёмная'},ti=0;
+  try{var sv=localStorage.getItem('flow-theme');if(sv&&TH.indexOf(sv)>=0)ti=TH.indexOf(sv);}catch(e){}
+  function applyTheme(){var v=TH[ti];if(v==='auto'){if(hostTheme)root.setAttribute('data-theme',hostTheme);else root.removeAttribute('data-theme');}else root.setAttribute('data-theme',v);bTheme.textContent='Тема: '+TN[v];}
+  bTheme.addEventListener('click',function(){ti=(ti+1)%3;applyTheme();try{localStorage.setItem('flow-theme',TH[ti]);}catch(e){}});
+  applyTheme();
+  ['wheel','touchmove'].forEach(function(e){window.addEventListener(e,function(){if(follow)setFollow(false);},{passive:true});});
+  window.addEventListener('keydown',function(e){if(follow&&['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].indexOf(e.key)>=0&&e.target.tagName!=='BUTTON')setFollow(false);});
+  bPlay.addEventListener('click',function(){playing=!playing;label();if(playing&&!started){hideCta();started=true;run(gen,0,false);}});
+  document.getElementById('restart').addEventListener('click',function(){hideCta();setFollow(true);gen++;playing=true;started=true;label();run(gen,0,false);});
+  var SUM=DATA.summary||[];var sm=document.getElementById('sum');if(sm)SUM.forEach(function(x){var d=document.createElement('div');d.innerHTML='<b></b><span></span>';d.firstChild.textContent=x[0];d.lastChild.textContent=x[1];sm.appendChild(d);});
+  var jumpEl=document.getElementById('jump');function jumpBtn(txt,el,cls){var b=document.createElement('button');b.type='button';b.textContent=txt;if(cls)b.className=cls;b.addEventListener('click',function(){setFollow(false);menu(false);go(el,'start',true);});jumpEl.appendChild(b);}
+  [].concat(DATA.table||[]).forEach(function(T,ti){var el=document.createElement('div'),num=T.num||[];document.getElementById('tbl').appendChild(el);if(!ti){var jb=document.createElement('b');jb.textContent='Разделы';jumpEl.appendChild(jb);}jumpBtn(T.nav||T.title,el);
+    var h=(T.title?'<h3>'+esc(T.title)+'</h3>':'')+(T.note?'<p>'+esc(T.note)+'</p>':'')+'<table><thead><tr>'+T.head.map(function(x,i){return '<th'+(num.indexOf(i)>=0?' class="n"':'')+'>'+esc(x)+'</th>';}).join('')+'</tr></thead><tbody>';
+    T.rows.forEach(function(r,ri){h+='<tr'+(T.total&&ri===T.rows.length-1?' class="tot"':'')+'>'+r.map(function(c,i){var v=Array.isArray(c)?esc(c[0])+'<small>'+esc(c[1])+'</small>':esc(c);return '<td'+(num.indexOf(i)>=0?' class="n"':'')+'>'+v+'</td>';}).join('')+'</tr>';});
+    el.innerHTML=h+'</tbody></table>';});
+  if(jumpEl.firstChild)jumpBtn('Анимация',document.getElementById('cta')||scenesEl,'anim');
+  label();restAll();
+  var ctaEl=document.getElementById('cta');function hideCta(){if(ctaEl)ctaEl.classList.add('hide');}
+  document.getElementById('cta-btn').addEventListener('click',function(){jump(0,false);});
+})();
+</script>
+</body>
+</html>
